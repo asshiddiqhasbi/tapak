@@ -2,9 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createWatchEntry, updateWatchEntry } from '@/lib/actions/watch-entries'
+import { createClient } from '@/lib/supabase'
+
+import Toast from '@/components/ui/toast'
+import ImageCropperModal from '@/components/ui/image-cropper-modal'
 
 type WatchType = 'ANIME' | 'SERIES' | 'FILM'
+type WatchStatus = 'PLAN_TO_WATCH' | 'WATCHING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED'
 
 type Props = {
   initialData?: {
@@ -13,8 +19,21 @@ type Props = {
     type: WatchType
     posterUrl?: string | null
     totalEpisodes?: number | null
+    currentEpisode?: number | null
+    status?: WatchStatus | null
   }
 }
+
+const BUCKET_NAME = 'tapak-media'
+const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
+
+const STATUS_OPTIONS: { value: WatchStatus; label: string }[] = [
+  { value: 'PLAN_TO_WATCH', label: 'Plan to Watch' },
+  { value: 'WATCHING', label: 'Watching' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'ON_HOLD', label: 'On Hold' },
+  { value: 'DROPPED', label: 'Dropped' },
+]
 
 export default function WatchEntryForm({ initialData }: Props) {
   const router = useRouter()
@@ -22,23 +41,133 @@ export default function WatchEntryForm({ initialData }: Props) {
 
   const [title, setTitle] = useState(initialData?.title ?? '')
   const [type, setType] = useState<WatchType>(initialData?.type ?? 'ANIME')
-  const [posterUrl, setPosterUrl] = useState(initialData?.posterUrl ?? '')
+  const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
   const [totalEpisodes, setTotalEpisodes] = useState(
     initialData?.totalEpisodes?.toString() ?? ''
   )
+  const [currentEpisode, setCurrentEpisode] = useState(
+    initialData?.currentEpisode?.toString() ?? '0'
+  )
+
+  const [posterUrl] = useState(initialData?.posterUrl ?? '')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [cropRawSrc, setCropRawSrc] = useState<string | null>(null)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function handleStatusChange(newStatus: WatchStatus) {
+    setStatus(newStatus)
+    setError(null)
+
+    if (newStatus === 'PLAN_TO_WATCH') {
+      setCurrentEpisode('0')
+    } else if (newStatus === 'COMPLETED') {
+      const parsedTotal = parseInt(totalEpisodes)
+      if (!isNaN(parsedTotal) && parsedTotal > 0) {
+        setCurrentEpisode(parsedTotal.toString())
+      }
+    }
+  }
+
+  function handleTotalEpisodesChange(value: string) {
+    setTotalEpisodes(value)
+    if (status === 'COMPLETED') {
+      const parsedTotal = parseInt(value)
+      if (!isNaN(parsedTotal) && parsedTotal > 0) {
+        setCurrentEpisode(parsedTotal.toString())
+      }
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    setError(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validasi Jenis File Gambar
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setError('Jenis file harus berupa gambar (JPG, PNG, atau WebP).')
+      e.target.value = ''
+      return
+    }
+
+    // Validasi Ukuran File (Maks 1MB)
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Ukuran file maksimal 1MB, silakan compress dulu.')
+      e.target.value = ''
+      return
+    }
+
+    const rawUrl = URL.createObjectURL(file)
+    setCropRawSrc(rawUrl)
+    e.target.value = ''
+  }
+
+  async function uploadPosterFile(file: File): Promise<string> {
+    try {
+      const supabase = createClient()
+      const ext = file.name.split('.').pop() || 'jpg'
+      const filePath = `posters/poster-${Date.now()}-${Math.random().toString(36).substring(2, 6)}.${ext}`
+
+      const { error: uploadErr } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadErr) {
+        console.warn('Supabase storage upload fallback to base64:', uploadErr.message)
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+      }
+
+      const { data: publicData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath)
+
+      return publicData.publicUrl
+    } catch {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
+    let finalPosterUrl = posterUrl || undefined
+
+    if (selectedFile) {
+      try {
+        finalPosterUrl = await uploadPosterFile(selectedFile)
+      } catch (err) {
+        setError('Gagal memproses file poster')
+        setLoading(false)
+        return
+      }
+    }
+
+    const parsedTotal = totalEpisodes ? parseInt(totalEpisodes) : undefined
+    const parsedCurrent = status === 'PLAN_TO_WATCH' ? 0 : (currentEpisode ? parseInt(currentEpisode) : 0)
+
     const payload = {
       title,
       type,
-      posterUrl: posterUrl || undefined,
-      totalEpisodes: totalEpisodes ? parseInt(totalEpisodes) : undefined,
+      status,
+      posterUrl: finalPosterUrl,
+      totalEpisodes: type === 'FILM' ? undefined : parsedTotal,
+      currentEpisode: type === 'FILM' ? 0 : parsedCurrent,
     }
 
     try {
@@ -56,66 +185,176 @@ export default function WatchEntryForm({ initialData }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md space-y-4">
-      <h1 className="text-2xl font-bold">
-        {isEdit ? 'Edit Tontonan' : 'Tambah Tontonan'}
-      </h1>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div>
-        <label className="block text-sm font-medium">Judul</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 w-full rounded border px-3 py-2"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Tipe</label>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as WatchType)}
-          className="mt-1 w-full rounded border px-3 py-2"
+    <div className="mx-auto max-w-lg space-y-6">
+      <div className="flex items-center justify-between pb-1">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {isEdit ? 'Edit Tontonan' : 'Tambah Tontonan Baru'}
+          </h1>
+          <p className="text-xs text-muted mt-1">
+            {isEdit ? 'Ubah informasi tontonan yang dipilih' : 'Tambahkan tontonan baru ke perpustakaan Anda'}
+          </p>
+        </div>
+        <Link
+          href="/library"
+          className="text-xs font-medium text-muted hover:text-foreground transition-colors"
         >
-          <option value="ANIME">Anime</option>
-          <option value="SERIES">Series</option>
-          <option value="FILM">Film</option>
-        </select>
+          Batal
+        </Link>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Total Episode (opsional)</label>
-        <input
-          type="number"
-          value={totalEpisodes}
-          onChange={(e) => setTotalEpisodes(e.target.value)}
-          className="mt-1 w-full rounded border px-3 py-2"
-          min={1}
+      <Toast message={error} type="error" onClose={() => setError(null)} />
+
+      {cropRawSrc && (
+        <ImageCropperModal
+          imageSrc={cropRawSrc}
+          aspectRatio={2 / 3}
+          cropShape="rect"
+          title="Potong Poster Tontonan (2:3)"
+          onCancel={() => setCropRawSrc(null)}
+          onCropComplete={(croppedFile, previewUrl) => {
+            setSelectedFile(croppedFile)
+            setFilePreview(previewUrl)
+            setCropRawSrc(null)
+          }}
         />
-      </div>
+      )}
 
-      <div>
-        <label className="block text-sm font-medium">Poster URL (opsional)</label>
-        <input
-          type="text"
-          value={posterUrl}
-          onChange={(e) => setPosterUrl(e.target.value)}
-          className="mt-1 w-full rounded border px-3 py-2"
-          placeholder="https://..."
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40 space-y-5">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+            Judul Tontonan *
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+            placeholder="Contoh: One Piece, Severance, Interstellar..."
+            required
+          />
+        </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-      >
-        {loading ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah'}
-      </button>
-    </form>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Tipe Tontonan
+            </label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as WatchType)}
+              className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+            >
+              <option value="ANIME">Anime</option>
+              <option value="SERIES">Series</option>
+              <option value="FILM">Film</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Status Tontonan
+            </label>
+            <select
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value as WatchStatus)}
+              className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Dynamic Episode Fields */}
+        {type !== 'FILM' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                Total Episode (opsional)
+              </label>
+              <input
+                type="number"
+                value={totalEpisodes}
+                onChange={(e) => handleTotalEpisodesChange(e.target.value)}
+                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                placeholder="Contoh: 12, 24..."
+                min={1}
+              />
+            </div>
+
+            {status !== 'PLAN_TO_WATCH' && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                  Episode Terakhir Ditonton
+                </label>
+                <input
+                  type="number"
+                  value={currentEpisode}
+                  onChange={(e) => setCurrentEpisode(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                  min={0}
+                  max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Poster File Upload Only */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+            Upload Poster Gambar (opsional, maks 1MB)
+          </label>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="w-full text-xs text-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-accent file:text-background hover:file:bg-accent-hover transition-colors"
+          />
+
+          {filePreview ? (
+            <div className="flex items-center gap-3 pt-3">
+              <img
+                src={filePreview}
+                alt="Preview Poster"
+                className="h-24 w-16 object-cover rounded-lg border border-border shadow-sm"
+              />
+              <span className="text-xs text-muted">Preview file terpilih</span>
+            </div>
+          ) : (
+            posterUrl && (
+              <div className="flex items-center gap-3 pt-3">
+                <img
+                  src={posterUrl}
+                  alt="Poster Saat Ini"
+                  className="h-24 w-16 object-cover rounded-lg border border-border shadow-sm"
+                />
+                <span className="text-xs text-muted">Poster saat ini</span>
+              </div>
+            )
+          )}
+        </div>
+
+        <div className="pt-2 flex justify-end gap-3">
+          <Link
+            href="/library"
+            className="rounded-lg border border-border px-4 py-2 text-xs font-semibold text-muted hover:text-foreground transition-colors"
+          >
+            Batal
+          </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-accent px-5 py-2 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm"
+          >
+            {loading ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah Tontonan'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }

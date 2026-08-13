@@ -15,6 +15,7 @@ export default function DeleteButton({ id }: { id: string }) {
     setLoading(true)
     try {
       await deleteWatchEntry(id)
+      router.push('/library')
       router.refresh()
     } catch {
       alert('Gagal menghapus data')
@@ -26,7 +27,7 @@ export default function DeleteButton({ id }: { id: string }) {
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600 disabled:opacity-50"
+      className="rounded-md border border-rose-900/50 bg-rose-950/40 px-2.5 py-1 text-xs font-medium text-rose-400 hover:bg-rose-900/60 hover:text-rose-200 disabled:opacity-50 transition-colors"
     >
       {loading ? 'Menghapus...' : 'Hapus'}
     </button>

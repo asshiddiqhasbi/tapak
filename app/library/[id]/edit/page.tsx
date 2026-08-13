@@ -18,7 +18,7 @@ export default async function EditWatchEntryPage({
   if (!entry || entry.userId !== user.id) notFound()
 
   return (
-    <div className="p-8">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <WatchEntryForm
         initialData={{
           id: entry.id,
@@ -26,6 +26,8 @@ export default async function EditWatchEntryPage({
           type: entry.type,
           posterUrl: entry.posterUrl,
           totalEpisodes: entry.totalEpisodes,
+          currentEpisode: entry.currentEpisode,
+          status: entry.status,
         }}
       />
     </div>
