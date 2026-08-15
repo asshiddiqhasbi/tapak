@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { updateAvatarUrl } from '@/lib/actions/user'
+import Image from 'next/image'
 import Toast from '@/components/ui/toast'
 import ImageCropperModal from '@/components/ui/image-cropper-modal'
 
@@ -108,6 +109,7 @@ export default function AvatarUpload({
           aspectRatio={1 / 1}
           cropShape="round"
           title="Potong Foto Profil (1:1)"
+          maxWidth={400}
           onCancel={() => setCropRawSrc(null)}
           onCropComplete={(croppedFile) => {
             setCropRawSrc(null)
@@ -119,11 +121,15 @@ export default function AvatarUpload({
       <div className="flex items-center gap-5">
         <div className="relative group">
           {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={username}
-              className="h-20 w-20 rounded-full object-cover border-2 border-accent/40 shadow-md group-hover:opacity-80 transition-opacity"
-            />
+            <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-accent/40 shadow-md group-hover:opacity-80 transition-opacity">
+              <Image
+                src={avatarUrl}
+                alt={username}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-background font-extrabold text-2xl border-2 border-accent/40 shadow-md group-hover:opacity-90 transition-opacity">
               {initials}

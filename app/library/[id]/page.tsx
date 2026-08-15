@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import Image from 'next/image'
+import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
 import ProgressControl from '@/components/watch-entry/progress-control'
@@ -38,11 +39,15 @@ export default async function WatchEntryDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40">
         <div className="flex gap-4">
           {entry.posterUrl ? (
-            <img
-              src={entry.posterUrl}
-              alt={entry.title}
-              className="h-36 w-24 flex-shrink-0 object-cover rounded-xl border border-border/80 shadow-md"
-            />
+            <div className="relative h-36 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-border/80 shadow-md">
+              <Image
+                src={entry.posterUrl}
+                alt={entry.title}
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="flex h-36 w-24 flex-shrink-0 items-center justify-center rounded-xl border border-border/80 bg-surface-hover text-xs font-bold text-muted uppercase">
               {entry.type}

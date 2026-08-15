@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
@@ -124,11 +125,15 @@ export default async function LibraryPage({
                 <div className="space-y-3">
                   <div className="flex gap-4">
                     {entry.posterUrl ? (
-                      <img
-                        src={entry.posterUrl}
-                        alt={entry.title}
-                        className="h-28 w-20 flex-shrink-0 object-cover rounded-lg bg-surface-hover shadow-sm group-hover:scale-105 transition-transform duration-300 ease-out"
-                      />
+                      <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-surface-hover shadow-sm">
+                        <Image
+                          src={entry.posterUrl}
+                          alt={entry.title}
+                          fill
+                          sizes="80px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
+                        />
+                      </div>
                     ) : (
                       <div className="flex h-28 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-surface-hover text-xs font-bold text-muted uppercase">
                         {entry.type}

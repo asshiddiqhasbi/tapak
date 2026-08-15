@@ -10,6 +10,7 @@ type Props = {
   aspectRatio?: number
   cropShape?: 'rect' | 'round'
   title?: string
+  maxWidth?: number
   onCancel: () => void
   onCropComplete: (croppedFile: File, croppedPreviewUrl: string) => void
 }
@@ -19,6 +20,7 @@ export default function ImageCropperModal({
   aspectRatio = 2 / 3,
   cropShape = 'rect',
   title = 'Potong Gambar',
+  maxWidth = 800,
   onCancel,
   onCropComplete,
 }: Props) {
@@ -43,7 +45,7 @@ export default function ImageCropperModal({
     if (!croppedAreaPixels) return
     setLoading(true)
     try {
-      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, 'cropped-poster.jpg')
+      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, 'cropped.jpg', maxWidth)
       const previewUrl = URL.createObjectURL(croppedFile)
       onCropComplete(croppedFile, previewUrl)
     } catch (err) {

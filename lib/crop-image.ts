@@ -8,7 +8,8 @@ export type Area = {
 export default async function getCroppedImg(
   imageSrc: string,
   pixelCrop: Area,
-  fileName: string = 'cropped.jpg'
+  fileName: string = 'cropped.jpg',
+  maxWidth: number = 800
 ): Promise<File> {
   const image = await createImage(imageSrc)
   const canvas = document.createElement('canvas')
@@ -18,8 +19,18 @@ export default async function getCroppedImg(
     throw new Error('Canvas 2D context not available')
   }
 
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
+  // Calculate target dimensions capped at maxWidth
+  let targetWidth = pixelCrop.width
+  let targetHeight = pixelCrop.height
+
+  if (targetWidth > maxWidth) {
+    const scale = maxWidth / targetWidth
+    targetWidth = maxWidth
+    targetHeight = Math.round(pixelCrop.height * scale)
+  }
+
+  canvas.width = targetWidth
+  canvas.height = targetHeight
 
   ctx.drawImage(
     image,
@@ -29,8 +40,8 @@ export default async function getCroppedImg(
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    targetWidth,
+    targetHeight
   )
 
   return new Promise((resolve, reject) => {
@@ -41,7 +52,7 @@ export default async function getCroppedImg(
       }
       const file = new File([blob], fileName, { type: 'image/jpeg' })
       resolve(file)
-    }, 'image/jpeg', 0.92)
+    }, 'image/jpeg', 0.85)
   })
 }
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-12">
-      {/* Header & Personal Greeting (Tanpa Garis Divider) */}
+      {/* Header & Personal Greeting */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
@@ -117,10 +118,12 @@ export default async function DashboardPage() {
                     {/* Portrait Poster */}
                     {entry.posterUrl ? (
                       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-surface-hover shadow-inner">
-                        <img
+                        <Image
                           src={entry.posterUrl}
                           alt={entry.title}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
+                          fill
+                          sizes="(max-width: 640px) 150px, 200px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
                         />
                       </div>
                     ) : (
@@ -227,11 +230,15 @@ export default async function DashboardPage() {
                   className="group flex items-center gap-4 rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-3.5 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
                 >
                   {entry.posterUrl ? (
-                    <img
-                      src={entry.posterUrl}
-                      alt={entry.title}
-                      className="h-16 w-12 flex-shrink-0 object-cover rounded-md bg-surface-hover shadow-sm group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-md bg-surface-hover shadow-sm">
+                      <Image
+                        src={entry.posterUrl}
+                        alt={entry.title}
+                        fill
+                        sizes="48px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   ) : (
                     <div className="flex h-16 w-12 flex-shrink-0 items-center justify-center rounded-md bg-surface-hover text-[10px] text-muted font-semibold">
                       {entry.type}
