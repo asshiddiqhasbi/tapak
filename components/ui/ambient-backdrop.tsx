@@ -1,15 +1,11 @@
+import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
 
-export default async function AmbientBackdrop() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return null
-
+const getBackdropPosters = cache(async (userId: string) => {
   const entriesWithPosters = await prisma.watchEntry.findMany({
     where: {
-      userId: user.id,
+      userId,
       posterUrl: { not: null },
     },
     select: { id: true, posterUrl: true },
@@ -17,10 +13,18 @@ export default async function AmbientBackdrop() {
     take: 10,
   })
 
-  const posters = entriesWithPosters
+  return entriesWithPosters
     .map((e) => e.posterUrl)
     .filter((url): url is string => Boolean(url && url.trim().length > 0))
+})
 
+export default async function AmbientBackdrop() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const posters = await getBackdropPosters(user.id)
   if (posters.length === 0) return null
 
   const isFewPosters = posters.length < 4
