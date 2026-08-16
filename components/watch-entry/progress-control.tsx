@@ -69,12 +69,31 @@ export default function ProgressControl({
         rating: numericRating,
         notes: noteText,
       })
+      router.push('/library')
       router.refresh()
-      setMessage('Perubahan tersimpan!')
-      setTimeout(() => setMessage(null), 2500)
     } catch {
       setMessage('Gagal menyimpan perubahan')
-    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleMarkCompleted() {
+    setLoading(true)
+    setMessage(null)
+    const targetEp = totalEpisodes && totalEpisodes > 0 ? totalEpisodes : episode
+    const numericRating = selectedRating ? parseInt(selectedRating, 10) : null
+
+    try {
+      await updateProgress(id, {
+        currentEpisode: targetEp,
+        status: 'COMPLETED',
+        rating: numericRating,
+        notes: noteText,
+      })
+      router.push('/library')
+      router.refresh()
+    } catch {
+      setMessage('Gagal memperbarui status')
       setLoading(false)
     }
   }
@@ -111,6 +130,15 @@ export default function ProgressControl({
 
   const episodeText = formatEpisodeText(type, episode, totalEpisodes)
 
+  // Smart suggestion condition:
+  // Non-film, currently WATCHING, totalEpisodes exists & > 0, currentEpisode >= totalEpisodes
+  const showCompletionBanner =
+    type !== 'FILM' &&
+    selectedStatus === 'WATCHING' &&
+    totalEpisodes !== null &&
+    totalEpisodes > 0 &&
+    episode >= totalEpisodes
+
   return (
     <div className="space-y-6 rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-5 shadow-xl shadow-black/40">
       <Toast
@@ -118,6 +146,26 @@ export default function ProgressControl({
         type={message?.includes('Gagal') ? 'error' : 'success'}
         onClose={() => setMessage(null)}
       />
+
+      {/* Smart Suggestion Banner */}
+      {showCompletionBanner && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-emerald-800/60 bg-emerald-950/80 p-4 text-xs shadow-lg animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2.5 text-emerald-200 font-medium">
+            <span className="text-base">🎉</span>
+            <span>
+              Kamu sudah menonton semua episode ({episode}/{totalEpisodes})! Tandai sebagai selesai?
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleMarkCompleted}
+            disabled={loading}
+            className="flex-shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3.5 py-1.5 font-semibold text-white shadow transition-colors active:scale-95 disabled:opacity-50"
+          >
+            {loading ? 'Memproses...' : 'Tandai Selesai'}
+          </button>
+        </div>
+      )}
 
       {/* Update Status */}
       <div>
