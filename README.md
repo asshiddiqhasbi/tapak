@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 👣 Tapak
 
-## Getting Started
+**Every Watch Leaves a Footprint.**
 
-First, run the development server:
+Tapak adalah web app personal untuk mencatat perjalanan menontonmu — anime, series, dan film. Lupa udah sampai episode berapa? Tapak bantu kamu track progress, status tontonan, sampai kasih rating & catatan pribadi untuk setiap judul.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+🔗 **Live Demo:** [tapak-seven.vercel.app](https://tapak-seven.vercel.app)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Kenapa Dibuat
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sering lupa sudah nonton apa dan sampai episode berapa, terutama saat nonton anime/series yang berjeda karena kesibukan. Tapak dibuat untuk mencatat itu semua di satu tempat, sekaligus jadi arsip pribadi dari semua yang pernah ditonton.
 
-## Learn More
+## 🚀 Fitur
 
-To learn more about Next.js, take a look at the following resources:
+- **Autentikasi** — Register & login dengan email/password
+- **CRUD Tontonan** — Tambah, edit, hapus judul (anime/series/film)
+- **Progress Tracking** — Update episode terakhir ditonton, dengan smart suggestion tandai selesai
+- **Status Tontonan** — Plan to Watch, Watching, Completed, On Hold, Dropped
+- **Rating & Catatan Pribadi** — Beri rating 1-10 dan catatan personal untuk tiap judul
+- **Dashboard** — Ringkasan aktivitas, Continue Watching, Recently Added
+- **Profile & Statistik** — Breakdown tontonan per status, total episode ditonton
+- **Upload Gambar** — Poster tontonan & avatar profil (dengan kompresi otomatis)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Layer | Teknologi |
+|---|---|
+| Framework | [Next.js](https://nextjs.org) (App Router, TypeScript) |
+| Styling | [Tailwind CSS](https://tailwindcss.com) |
+| Database | PostgreSQL via [Supabase](https://supabase.com) |
+| ORM | [Prisma](https://prisma.io) |
+| Auth & Storage | Supabase Auth & Storage |
+| Deployment | [Vercel](https://vercel.com) |
 
-## Deploy on Vercel
+## 📸 Preview
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+<!-- Tambahkan screenshot Dashboard di sini -->
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧑‍💻 Menjalankan Secara Lokal
+
+1. Clone repo ini
+   ```bash
+   git clone https://github.com/asshiddiqhasbi/tapak.git
+   cd tapak
+   ```
+
+2. Install dependencies
+   ```bash
+   npm install
+   ```
+
+3. Buat file `.env.local` dan isi dengan environment variables berikut:
+   ```env
+   DATABASE_URL=
+   DIRECT_URL=
+   NEXT_PUBLIC_SUPABASE_URL=
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=
+   SUPABASE_SERVICE_ROLE_KEY=
+   ```
+
+4. Push schema database
+   ```bash
+   npx prisma db push
+   ```
+
+5. Jalankan development server
+   ```bash
+   npm run dev
+   ```
+
+   Buka [http://localhost:3000](http://localhost:3000) di browser.
+
+## 📁 Struktur Database
+
+**User** — id, username, email, createdAt
+**WatchEntry** — id, userId, title, type (Anime/Series/Film), posterUrl, totalEpisodes, currentEpisode, status, rating, notes, startedAt, completedAt
+
+## 🗺️ Roadmap
+
+- [ ] Integrasi API eksternal (Jikan/TMDB) untuk auto-fill data & poster
+- [ ] Crop gambar sebelum upload
+- [ ] Statistik lanjutan (genre favorit, total jam nonton)
+
+---
+
+Dibuat dengan ❤️ sebagai portfolio project.
