@@ -12,8 +12,28 @@ const jakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tapak — Personal Watch Journal",
-  description: "Tracking tontonan pribadi: progress episode, status, dan rating",
+  title: {
+    default: "Tapak — Personal Watch Journal",
+    template: "%s | Tapak",
+  },
+  description:
+    "Catat progress tontonan anime, series, dan film. Track episode, status, rating, dan catatan pribadi dalam satu platform.",
+  metadataBase: new URL("https://tapak-seven.vercel.app"),
+  openGraph: {
+    title: "Tapak — Personal Watch Journal",
+    description:
+      "Catat progress tontonan anime, series, dan film. Track episode, status, rating, dan catatan pribadi dalam satu platform.",
+    url: "https://tapak-seven.vercel.app",
+    siteName: "Tapak",
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tapak — Personal Watch Journal",
+    description:
+      "Catat progress tontonan anime, series, dan film. Track episode, status, rating, dan catatan pribadi dalam satu platform.",
+  },
 };
 
 export default function RootLayout({
