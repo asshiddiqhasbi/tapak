@@ -13,9 +13,11 @@ type WatchType = 'ANIME' | 'SERIES' | 'FILM'
 type WatchStatus = 'PLAN_TO_WATCH' | 'WATCHING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED'
 
 type Props = {
+  existingGroupTitles?: string[]
   initialData?: {
     id: string
     title: string
+    groupTitle?: string | null
     type: WatchType
     posterUrl?: string | null
     totalEpisodes?: number | null
@@ -35,11 +37,12 @@ const STATUS_OPTIONS: { value: WatchStatus; label: string }[] = [
   { value: 'DROPPED', label: 'Dropped' },
 ]
 
-export default function WatchEntryForm({ initialData }: Props) {
+export default function WatchEntryForm({ initialData, existingGroupTitles = [] }: Props) {
   const router = useRouter()
   const isEdit = !!initialData
 
   const [title, setTitle] = useState(initialData?.title ?? '')
+  const [groupTitle, setGroupTitle] = useState(initialData?.groupTitle ?? '')
   const [type, setType] = useState<WatchType>(initialData?.type ?? 'ANIME')
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
   const [totalEpisodes, setTotalEpisodes] = useState(
@@ -54,6 +57,7 @@ export default function WatchEntryForm({ initialData }: Props) {
   const [filePreview, setFilePreview] = useState<string | null>(null)
   const [cropRawSrc, setCropRawSrc] = useState<string | null>(null)
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -141,8 +145,16 @@ export default function WatchEntryForm({ initialData }: Props) {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleFormSubmitAttempt(e: React.FormEvent) {
     e.preventDefault()
+    if (isEdit && initialData?.status === 'COMPLETED' && status !== 'COMPLETED') {
+      setShowConfirmModal(true)
+      return
+    }
+    executeSubmit()
+  }
+
+  async function executeSubmit() {
     setError(null)
     setLoading(true)
 
@@ -163,6 +175,7 @@ export default function WatchEntryForm({ initialData }: Props) {
 
     const payload = {
       title,
+      groupTitle: groupTitle.trim() || undefined,
       type,
       status,
       posterUrl: finalPosterUrl,
@@ -220,7 +233,57 @@ export default function WatchEntryForm({ initialData }: Props) {
         />
       )}
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40 space-y-5">
+      {/* Confirmation Modal for high-risk status change from COMPLETED */}
+      {showConfirmModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowConfirmModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-border/80 bg-surface p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-950/70 border border-amber-800/50 text-sm">
+                  ⚠️
+                </span>
+                <span>Konfirmasi Perubahan Status</span>
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                Ubah status dari Completed?
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Mengubah status dari <strong>Completed (Selesai)</strong> akan memperbarui status progres tontonan. Yakin ingin melanjutkan?
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={loading}
+                className="rounded-xl border border-border/80 px-4 py-2 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmModal(false)
+                  executeSubmit()
+                }}
+                disabled={loading}
+                className="rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-background hover:bg-accent-hover transition-colors shadow-md"
+              >
+                {loading ? 'Memproses...' : 'Ya, Lanjutkan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleFormSubmitAttempt} className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40 space-y-5">
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
             Judul Tontonan *
@@ -233,6 +296,30 @@ export default function WatchEntryForm({ initialData }: Props) {
             placeholder="Contoh: One Piece, Severance, Interstellar..."
             required
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+            Nama Seri / Koleksi (opsional)
+          </label>
+          <input
+            type="text"
+            list="group-title-list"
+            value={groupTitle}
+            onChange={(e) => setGroupTitle(e.target.value)}
+            className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+            placeholder="Opsional, misal: Iron Man, Naruto, Demon Slayer..."
+          />
+          {existingGroupTitles && existingGroupTitles.length > 0 && (
+            <datalist id="group-title-list">
+              {existingGroupTitles.map((g) => (
+                <option key={g} value={g} />
+              ))}
+            </datalist>
+          )}
+          <p className="text-[11px] text-muted mt-1">
+            Isi jika tontonan ini bagian dari season/franchise bersambung agar dikelompokkan di Library.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
