@@ -53,7 +53,9 @@ export default async function LibraryPage({
   let orderBy: any = { createdAt: 'desc' }
   if (sort === 'updated') orderBy = { updatedAt: 'desc' }
   if (sort === 'title') orderBy = { title: 'asc' }
-  if (sort === 'rating') orderBy = { rating: 'desc' }
+  if (sort === 'rating') {
+    orderBy = [{ rating: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }]
+  }
 
   const entries = await prisma.watchEntry.findMany({
     where: whereClause,

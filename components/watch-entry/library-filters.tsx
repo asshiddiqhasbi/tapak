@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LibraryFilters({
@@ -16,10 +16,32 @@ export default function LibraryFilters({
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
 
   const [searchTerm, setSearchTerm] = useState(
     currentQuery || searchParams.get('q') || searchParams.get('query') || ''
   )
+
+  // Debounced Search (350ms) to avoid request spams on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentParamVal = searchParams.get('q') || searchParams.get('query') || ''
+      if (searchTerm.trim() !== currentParamVal.trim()) {
+        const params = new URLSearchParams(searchParams.toString())
+        if (searchTerm.trim()) {
+          params.set('q', searchTerm.trim())
+        } else {
+          params.delete('q')
+          params.delete('query')
+        }
+        startTransition(() => {
+          router.replace(`/library?${params.toString()}`, { scroll: false })
+        })
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm, router, searchParams])
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -28,18 +50,19 @@ export default function LibraryFilters({
     } else {
       params.delete(key)
     }
-    router.push(`/library?${params.toString()}`)
+    startTransition(() => {
+      router.replace(`/library?${params.toString()}`, { scroll: false })
+    })
   }
 
-  function handleSearchChange(val: string) {
-    setSearchTerm(val)
+  function handleClearSearch() {
+    setSearchTerm('')
     const params = new URLSearchParams(searchParams.toString())
-    if (val.trim()) {
-      params.set('q', val.trim())
-    } else {
-      params.delete('q')
-    }
-    router.push(`/library?${params.toString()}`)
+    params.delete('q')
+    params.delete('query')
+    startTransition(() => {
+      router.replace(`/library?${params.toString()}`, { scroll: false })
+    })
   }
 
   const statuses = [
@@ -66,13 +89,13 @@ export default function LibraryFilters({
   ]
 
   return (
-    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+    <div className={`flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 transition-opacity duration-200 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
       {/* Search Input Bar */}
       <div className="relative flex-1 min-w-[220px]">
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Cari berdasarkan judul..."
           className="w-full rounded-xl border border-border/80 bg-surface-hover pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent transition-all"
         />
@@ -87,7 +110,7 @@ export default function LibraryFilters({
         {searchTerm && (
           <button
             type="button"
-            onClick={() => handleSearchChange('')}
+            onClick={handleClearSearch}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted hover:text-foreground p-0.5"
             aria-label="Bersihkan pencarian"
           >

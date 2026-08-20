@@ -54,5 +54,8 @@ model WatchEntry {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
+  @@index([userId, status])
+  @@index([userId, type])
+  @@index([userId, rating])
   @@map("watch_entries")
 }
