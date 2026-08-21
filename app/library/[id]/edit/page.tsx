@@ -14,29 +14,15 @@ export default async function EditWatchEntryPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [entry, groupTitleEntries] = await Promise.all([
-    prisma.watchEntry.findUnique({ where: { id } }),
-    prisma.watchEntry.findMany({
-      where: { userId: user.id, groupTitle: { not: null } },
-      select: { groupTitle: true },
-      distinct: ['groupTitle'],
-    }),
-  ])
-
+  const entry = await prisma.watchEntry.findUnique({ where: { id } })
   if (!entry || entry.userId !== user.id) notFound()
-
-  const existingGroupTitles = groupTitleEntries
-    .map((e) => e.groupTitle)
-    .filter((g): g is string => Boolean(g && g.trim().length > 0))
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <WatchEntryForm
-        existingGroupTitles={existingGroupTitles}
         initialData={{
           id: entry.id,
           title: entry.title,
-          groupTitle: entry.groupTitle,
           type: entry.type,
           posterUrl: entry.posterUrl,
           totalEpisodes: entry.totalEpisodes,

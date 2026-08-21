@@ -13,11 +13,9 @@ type WatchType = 'ANIME' | 'SERIES' | 'FILM'
 type WatchStatus = 'PLAN_TO_WATCH' | 'WATCHING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED'
 
 type Props = {
-  existingGroupTitles?: string[]
   initialData?: {
     id: string
     title: string
-    groupTitle?: string | null
     type: WatchType
     posterUrl?: string | null
     totalEpisodes?: number | null
@@ -37,12 +35,11 @@ const STATUS_OPTIONS: { value: WatchStatus; label: string }[] = [
   { value: 'DROPPED', label: 'Dropped' },
 ]
 
-export default function WatchEntryForm({ initialData, existingGroupTitles = [] }: Props) {
+export default function WatchEntryForm({ initialData }: Props) {
   const router = useRouter()
   const isEdit = !!initialData
 
   const [title, setTitle] = useState(initialData?.title ?? '')
-  const [groupTitle, setGroupTitle] = useState(initialData?.groupTitle ?? '')
   const [type, setType] = useState<WatchType>(initialData?.type ?? 'ANIME')
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
   const [totalEpisodes, setTotalEpisodes] = useState(
@@ -175,7 +172,6 @@ export default function WatchEntryForm({ initialData, existingGroupTitles = [] }
 
     const payload = {
       title,
-      groupTitle: groupTitle.trim() || undefined,
       type,
       status,
       posterUrl: finalPosterUrl,
@@ -298,30 +294,6 @@ export default function WatchEntryForm({ initialData, existingGroupTitles = [] }
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-            Nama Seri / Koleksi (opsional)
-          </label>
-          <input
-            type="text"
-            list="group-title-list"
-            value={groupTitle}
-            onChange={(e) => setGroupTitle(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-            placeholder="Opsional, misal: Iron Man, Naruto, Demon Slayer..."
-          />
-          {existingGroupTitles && existingGroupTitles.length > 0 && (
-            <datalist id="group-title-list">
-              {existingGroupTitles.map((g) => (
-                <option key={g} value={g} />
-              ))}
-            </datalist>
-          )}
-          <p className="text-[11px] text-muted mt-1">
-            Isi jika tontonan ini bagian dari season/franchise bersambung agar dikelompokkan di Library.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
@@ -391,17 +363,19 @@ export default function WatchEntryForm({ initialData, existingGroupTitles = [] }
           </div>
         )}
 
-        {/* Poster File Upload Only */}
+        {/* Poster File Upload Only (Width constrained to button bounds) */}
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
             Upload Poster Gambar (opsional, maks 1MB)
           </label>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileSelect}
-            className="w-full text-xs text-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-accent file:text-background hover:file:bg-accent-hover transition-colors"
-          />
+          <div className="w-fit max-w-full">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileSelect}
+              className="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-accent file:text-background hover:file:bg-accent-hover file:cursor-pointer cursor-pointer transition-colors"
+            />
+          </div>
 
           {filePreview ? (
             <div className="flex items-center gap-3 pt-3">

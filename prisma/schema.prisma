@@ -40,7 +40,6 @@ model WatchEntry {
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title           String
-  groupTitle      String?
   type            WatchType
   posterUrl       String?
   totalEpisodes   Int?

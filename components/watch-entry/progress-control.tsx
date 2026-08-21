@@ -40,6 +40,7 @@ export default function ProgressControl({
   const [selectedRating, setSelectedRating] = useState<string>(rating ? rating.toString() : '')
   const [noteText, setNoteText] = useState(notes ?? '')
 
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -98,31 +99,10 @@ export default function ProgressControl({
     }
   }
 
-  async function handlePlusOne() {
+  function handlePlusOne() {
     const maxEp = totalEpisodes && totalEpisodes > 0 ? totalEpisodes : Infinity
     const nextEp = Math.min(episode + 1, maxEp)
     setEpisode(nextEp)
-
-    setLoading(true)
-    setMessage(null)
-
-    const numericRating = selectedRating ? parseInt(selectedRating, 10) : null
-
-    try {
-      await updateProgress(id, {
-        currentEpisode: nextEp,
-        status: selectedStatus,
-        rating: numericRating,
-        notes: noteText,
-      })
-      router.refresh()
-      setMessage('Progress +1 tersimpan!')
-      setTimeout(() => setMessage(null), 2500)
-    } catch {
-      setMessage('Gagal menyimpan progress')
-    } finally {
-      setLoading(false)
-    }
   }
 
   const isPlusOneDisabled =
@@ -146,6 +126,56 @@ export default function ProgressControl({
         type={message?.includes('Gagal') ? 'error' : 'success'}
         onClose={() => setMessage(null)}
       />
+
+      {/* Confirmation Save Modal */}
+      {showSaveConfirmModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowSaveConfirmModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-border/80 bg-surface p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-accent font-semibold text-xs">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-muted border border-accent/20 text-sm">
+                  💾
+                </span>
+                <span>Konfirmasi Simpan</span>
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                Simpan perubahan ini?
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Perubahan status, episode, rating, dan catatan tontonan Anda akan disimpan ke perpustakaan.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSaveConfirmModal(false)}
+                disabled={loading}
+                className="rounded-xl border border-border/80 px-4 py-2 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSaveConfirmModal(false)
+                  handleSaveAll()
+                }}
+                disabled={loading}
+                className="rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-background hover:bg-accent-hover transition-colors shadow-md"
+              >
+                {loading ? 'Menyimpan...' : 'Ya, Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Smart Suggestion Banner */}
       {showCompletionBanner && (
@@ -250,11 +280,11 @@ export default function ProgressControl({
         />
       </div>
 
-      {/* Single Save Button */}
+      {/* Single Save Button with Confirmation Modal Trigger */}
       <div className="pt-2 flex justify-end">
         <button
           type="button"
-          onClick={handleSaveAll}
+          onClick={() => setShowSaveConfirmModal(true)}
           disabled={loading}
           className="w-full sm:w-auto rounded-lg bg-accent px-5 py-2.5 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm"
         >

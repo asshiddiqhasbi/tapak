@@ -62,130 +62,6 @@ export default async function LibraryPage({
     orderBy,
   })
 
-  // Group entries by groupTitle
-  const groupsMap = new Map<string, typeof entries>()
-  const standaloneEntries: typeof entries = []
-
-  entries.forEach((entry) => {
-    if (entry.groupTitle && entry.groupTitle.trim()) {
-      const key = entry.groupTitle.trim()
-      if (!groupsMap.has(key)) {
-        groupsMap.set(key, [])
-      }
-      groupsMap.get(key)!.push(entry)
-    } else {
-      standaloneEntries.push(entry)
-    }
-  })
-
-  const groupKeys = Array.from(groupsMap.keys())
-
-  function renderCard(entry: typeof entries[0]) {
-    const badge = STATUS_BADGES[entry.status] ?? {
-      label: entry.status,
-      className: 'bg-gray-800 text-gray-300 border-gray-700',
-    }
-    const epText = formatEpisodeText(entry.type, entry.currentEpisode, entry.totalEpisodes)
-    const progressPct =
-      entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
-        ? Math.min(Math.round((entry.currentEpisode / entry.totalEpisodes) * 100), 100)
-        : null
-
-    return (
-      <div
-        key={entry.id}
-        className="group flex flex-col justify-between rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-4 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
-      >
-        <div className="space-y-3">
-          <div className="flex gap-4">
-            {entry.posterUrl ? (
-              <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-surface-hover shadow-sm">
-                <Image
-                  src={entry.posterUrl}
-                  alt={entry.title}
-                  fill
-                  sizes="80px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
-                />
-              </div>
-            ) : (
-              <div className="flex h-28 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-surface-hover text-xs font-bold text-muted uppercase">
-                {entry.type}
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-                  {entry.type}
-                </span>
-                <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded border ${badge.className}`}>
-                  {badge.label}
-                </span>
-              </div>
-
-              <Link
-                href={`/library/${entry.id}`}
-                className="font-semibold text-foreground text-base line-clamp-1 group-hover:text-accent transition-colors block"
-              >
-                {entry.title}
-              </Link>
-
-              <div className="flex items-center gap-3 text-xs text-muted">
-                {epText && <span>{epText}</span>}
-                {entry.rating && (
-                  <span className="text-amber-400 font-semibold flex items-center gap-1">
-                    ★ {entry.rating}/10
-                  </span>
-                )}
-              </div>
-
-              {/* Display startedAt / completedAt dates */}
-              <div className="flex items-center gap-3 text-[11px] text-muted/80 pt-0.5 flex-wrap">
-                {entry.startedAt && (
-                  <span>Mulai {formatDateShort(entry.startedAt)}</span>
-                )}
-                {entry.startedAt && entry.completedAt && <span>•</span>}
-                {entry.completedAt && (
-                  <span>Selesai {formatDateShort(entry.completedAt)}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Episode Progress Bar */}
-          {progressPct !== null && (
-            <div className="h-1.5 w-full rounded-full bg-border/80 overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-all duration-300"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between">
-          <Link
-            href={`/library/${entry.id}`}
-            className="text-xs font-medium text-accent hover:underline"
-          >
-            Detail & Progress &rarr;
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/library/${entry.id}/edit`}
-              className="rounded-md bg-surface-hover border border-border/60 px-2.5 py-1 text-xs text-foreground hover:bg-border transition-colors"
-            >
-              Edit
-            </Link>
-            <DeleteButton id={entry.id} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-6">
       {/* Header */}
@@ -220,7 +96,7 @@ export default async function LibraryPage({
         />
       </div>
 
-      {/* Entries List / Grouped & Standalone */}
+      {/* Entries List / Grid */}
       {entries.length === 0 ? (
         <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-12 text-center shadow-xl shadow-black/30 space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-muted text-accent text-3xl border border-accent/20">
@@ -240,68 +116,131 @@ export default async function LibraryPage({
           </Link>
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Render Groups Header & Cards */}
-          {groupKeys.map((gTitle) => {
-            const groupItems = groupsMap.get(gTitle) || []
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {entries.map((entry) => {
+            const badge = STATUS_BADGES[entry.status] ?? {
+              label: entry.status,
+              className: 'bg-gray-800 text-gray-300 border-gray-700',
+            }
+            const epText = formatEpisodeText(entry.type, entry.currentEpisode, entry.totalEpisodes)
+            const progressPct =
+              entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
+                ? Math.min(Math.round((entry.currentEpisode / entry.totalEpisodes) * 100), 100)
+                : null
+
             return (
-              <section
-                key={gTitle}
-                className="space-y-4 rounded-2xl border border-border/80 bg-surface/40 p-5 shadow-inner"
+              <div
+                key={entry.id}
+                className="group flex flex-col justify-between rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-4 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-muted text-accent text-xs font-bold border border-accent/20">
-                    📁
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <h2 className="text-base font-bold tracking-tight text-foreground">
-                      {gTitle}
-                    </h2>
-                    <span className="text-xs text-muted font-medium">
-                      ({groupItems.length} judul dalam seri)
-                    </span>
+                <div className="space-y-3">
+                  <div className="flex gap-4">
+                    {entry.posterUrl ? (
+                      <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-surface-hover shadow-sm">
+                        <Image
+                          src={entry.posterUrl}
+                          alt={entry.title}
+                          fill
+                          sizes="80px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-28 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-surface-hover text-xs font-bold text-muted uppercase">
+                        {entry.type}
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
+                          {entry.type}
+                        </span>
+                        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded border ${badge.className}`}>
+                          {badge.label}
+                        </span>
+                      </div>
+
+                      <Link
+                        href={`/library/${entry.id}`}
+                        className="font-semibold text-foreground text-base line-clamp-1 group-hover:text-accent transition-colors block"
+                      >
+                        {entry.title}
+                      </Link>
+
+                      <div className="flex items-center gap-3 text-xs text-muted">
+                        {epText && <span>{epText}</span>}
+                        {entry.rating && (
+                          <span className="text-amber-400 font-semibold flex items-center gap-1">
+                            ★ {entry.rating}/10
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Display startedAt / completedAt dates */}
+                      <div className="flex items-center gap-3 text-[11px] text-muted/80 pt-0.5 flex-wrap">
+                        {entry.startedAt && (
+                          <span>Mulai {formatDateShort(entry.startedAt)}</span>
+                        )}
+                        {entry.startedAt && entry.completedAt && <span>•</span>}
+                        {entry.completedAt && (
+                          <span>Selesai {formatDateShort(entry.completedAt)}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Episode Progress Bar */}
+                  {progressPct !== null && (
+                    <div className="h-1.5 w-full rounded-full bg-border/80 overflow-hidden">
+                      <div
+                        className="h-full bg-accent rounded-full transition-all duration-300"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {groupItems.map(renderCard)}
+                <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between">
+                  <Link
+                    href={`/library/${entry.id}`}
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    Detail & Progress &rarr;
+                  </Link>
+
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/library/${entry.id}/edit`}
+                      className="rounded-md bg-surface-hover border border-border/60 px-2.5 py-1 text-xs text-foreground hover:bg-border transition-colors"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteButton id={entry.id} />
+                  </div>
                 </div>
-              </section>
+              </div>
             )
           })}
 
-          {/* Render Standalone Entries (without groupTitle) */}
-          {standaloneEntries.length > 0 && (
-            <div className="space-y-4">
-              {groupKeys.length > 0 && (
-                <h2 className="text-sm font-semibold tracking-tight text-muted uppercase">
-                  Tontonan Lainnya
-                </h2>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {standaloneEntries.map(renderCard)}
-
-                {/* Ghost Card Placeholder when standalone items are few */}
-                {entries.length < 4 && !searchQuery && (
-                  <Link
-                    href="/library/new"
-                    className="group flex items-center gap-4 rounded-2xl border-2 border-dashed border-border/80 bg-surface/40 hover:bg-surface/70 hover:border-accent/60 transition-all duration-300 p-4 shadow-sm"
-                  >
-                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-accent-muted text-accent font-bold text-xl group-hover:scale-110 transition-transform">
-                      +
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-foreground text-sm group-hover:text-accent transition-colors block">
-                        Tambah Tontonan Baru
-                      </span>
-                      <span className="text-xs text-muted block mt-0.5">
-                        Klik untuk menambahkan judul anime, series, atau film baru ke perpustakaan Anda
-                      </span>
-                    </div>
-                  </Link>
-                )}
+          {/* Ghost Card Placeholder when library items are few */}
+          {entries.length < 4 && !searchQuery && (
+            <Link
+              href="/library/new"
+              className="group flex items-center gap-4 rounded-2xl border-2 border-dashed border-border/80 bg-surface/40 hover:bg-surface/70 hover:border-accent/60 transition-all duration-300 p-4 shadow-sm"
+            >
+              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-accent-muted text-accent font-bold text-xl group-hover:scale-110 transition-transform">
+                +
               </div>
-            </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-foreground text-sm group-hover:text-accent transition-colors block">
+                  Tambah Tontonan Baru
+                </span>
+                <span className="text-xs text-muted block mt-0.5">
+                  Klik untuk menambahkan judul anime, series, atau film baru ke perpustakaan Anda
+                </span>
+              </div>
+            </Link>
           )}
         </div>
       )}

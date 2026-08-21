@@ -55,7 +55,6 @@ export async function updateProgress(
 
 export async function createWatchEntry(formData: {
   title: string
-  groupTitle?: string | null
   type: 'ANIME' | 'SERIES' | 'FILM'
   posterUrl?: string
   totalEpisodes?: number
@@ -81,7 +80,6 @@ export async function createWatchEntry(formData: {
     data: {
       userId: user.id,
       title: formData.title,
-      groupTitle: formData.groupTitle?.trim() || null,
       type: formData.type,
       posterUrl: formData.posterUrl || null,
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
@@ -100,7 +98,6 @@ export async function updateWatchEntry(
   id: string,
   formData: {
     title: string
-    groupTitle?: string | null
     type: 'ANIME' | 'SERIES' | 'FILM'
     posterUrl?: string
     totalEpisodes?: number
@@ -128,7 +125,6 @@ export async function updateWatchEntry(
     where: { id },
     data: {
       title: formData.title,
-      groupTitle: formData.groupTitle !== undefined ? (formData.groupTitle?.trim() || null) : entry.groupTitle,
       type: formData.type,
       posterUrl: formData.posterUrl !== undefined ? (formData.posterUrl || null) : entry.posterUrl,
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
