@@ -19,6 +19,8 @@ function LoginForm() {
   const [successMessage, setSuccessMessage] = useState<string | null>(
     searchParams.get('registered') === 'true'
       ? 'Registrasi berhasil! Silakan masuk dengan email dan kata sandi Anda.'
+      : searchParams.get('reset') === 'success'
+      ? 'Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi baru Anda.'
       : null
   )
   const [loading, setLoading] = useState(false)
@@ -74,9 +76,14 @@ function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-            Kata Sandi
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
+              Kata Sandi
+            </label>
+            <Link href="/forgot-password" className="text-xs text-accent hover:underline font-medium">
+              Lupa Kata Sandi?
+            </Link>
+          </div>
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
