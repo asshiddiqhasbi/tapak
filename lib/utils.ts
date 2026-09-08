@@ -1,11 +1,28 @@
 export function formatEpisodeText(
   type: string,
   currentEpisode: number,
-  totalEpisodes?: number | null
+  totalEpisodes?: number | null,
+  currentSeason?: number | null,
+  totalSeasons?: number | null
 ): string | null {
   if (type === 'FILM') return null
-  if (!totalEpisodes || totalEpisodes <= 0) {
-    return `Ep ${currentEpisode} (Ongoing)`
+
+  const epPart = !totalEpisodes || totalEpisodes <= 0
+    ? `Ep ${currentEpisode}`
+    : `Ep ${currentEpisode}/${totalEpisodes}`
+
+  if (totalSeasons && totalSeasons > 1) {
+    const sNum = currentSeason || 1
+    return `S${sNum}/${totalSeasons} • ${epPart}`
   }
-  return `Ep ${currentEpisode}/${totalEpisodes}`
+
+  if (currentSeason && currentSeason > 1) {
+    return `Season ${currentSeason} • ${epPart}`
+  }
+
+  if (!totalEpisodes || totalEpisodes <= 0) {
+    return `${epPart} (Ongoing)`
+  }
+
+  return epPart
 }

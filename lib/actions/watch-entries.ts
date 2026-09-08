@@ -15,6 +15,7 @@ export async function updateProgress(
   id: string,
   data: {
     currentEpisode?: number
+    currentSeason?: number
     status?: string
     rating?: number | null
     notes?: string | null
@@ -27,7 +28,7 @@ export async function updateProgress(
 
   const nextStatus = data.status ?? entry.status
   let startedAt = entry.startedAt
-  if (nextStatus !== 'PLAN_TO_WATCH' && !startedAt) {
+  if (entry.type !== 'FILM' && nextStatus !== 'PLAN_TO_WATCH' && !startedAt) {
     startedAt = new Date()
   }
 
@@ -40,6 +41,7 @@ export async function updateProgress(
     where: { id },
     data: {
       currentEpisode: data.currentEpisode !== undefined ? data.currentEpisode : entry.currentEpisode,
+      currentSeason: data.currentSeason !== undefined ? data.currentSeason : entry.currentSeason,
       status: nextStatus as any,
       rating: data.rating !== undefined ? data.rating : entry.rating,
       notes: data.notes !== undefined ? data.notes : entry.notes,
@@ -59,6 +61,8 @@ export async function createWatchEntry(formData: {
   posterUrl?: string
   totalEpisodes?: number
   currentEpisode?: number
+  totalSeasons?: number
+  currentSeason?: number
   status?: string
   rating?: number | null
   notes?: string | null
@@ -69,7 +73,7 @@ export async function createWatchEntry(formData: {
   const currentEpisode = formData.type === 'FILM' ? 0 : (formData.currentEpisode ?? 0)
 
   let startedAt: Date | null = null
-  if (status !== 'PLAN_TO_WATCH') {
+  if (formData.type !== 'FILM' && status !== 'PLAN_TO_WATCH') {
     startedAt = new Date()
   }
 
@@ -86,6 +90,8 @@ export async function createWatchEntry(formData: {
       posterUrl: formData.posterUrl || null,
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
       currentEpisode,
+      totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons || null),
+      currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason || 1),
       status: status as any,
       rating: formData.rating !== undefined ? formData.rating : null,
       notes: formData.notes !== undefined ? formData.notes : null,
@@ -106,6 +112,8 @@ export async function updateWatchEntry(
     posterUrl?: string
     totalEpisodes?: number
     currentEpisode?: number
+    totalSeasons?: number
+    currentSeason?: number
     status?: string
     rating?: number | null
     notes?: string | null
@@ -118,7 +126,7 @@ export async function updateWatchEntry(
 
   const nextStatus = formData.status ?? entry.status
   let startedAt = entry.startedAt
-  if (nextStatus !== 'PLAN_TO_WATCH' && !startedAt) {
+  if (formData.type !== 'FILM' && nextStatus !== 'PLAN_TO_WATCH' && !startedAt) {
     startedAt = new Date()
   }
 
@@ -135,6 +143,8 @@ export async function updateWatchEntry(
       posterUrl: formData.posterUrl !== undefined ? (formData.posterUrl || null) : entry.posterUrl,
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
       currentEpisode: formData.type === 'FILM' ? 0 : (formData.currentEpisode !== undefined ? formData.currentEpisode : entry.currentEpisode),
+      totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons !== undefined ? formData.totalSeasons : entry.totalSeasons),
+      currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason !== undefined ? formData.currentSeason : entry.currentSeason),
       status: nextStatus as any,
       rating: formData.rating !== undefined ? formData.rating : entry.rating,
       notes: formData.notes !== undefined ? formData.notes : entry.notes,

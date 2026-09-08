@@ -44,8 +44,10 @@ model WatchEntry {
   posterUrl       String?
   totalEpisodes   Int?
   currentEpisode  Int         @default(0)
+  totalSeasons    Int?
+  currentSeason   Int?        @default(1)
   status          WatchStatus
-  rating          Int?
+  rating          Float?
   notes           String?
   startedAt       DateTime?
   completedAt     DateTime?

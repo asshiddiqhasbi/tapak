@@ -33,9 +33,17 @@ export interface WatchEntryItem {
   posterUrl?: string | null
   totalEpisodes?: number | null
   currentEpisode: number
+  totalSeasons?: number | null
+  currentSeason?: number | null
   rating?: number | null
   startedAt?: Date | null
   completedAt?: Date | null
+}
+
+const TYPE_ICONS: Record<string, string> = {
+  FILM: '🎬',
+  SERIES: '📺',
+  ANIME: '🍿',
 }
 
 export default function BulkDeleteManager({
@@ -149,11 +157,18 @@ export default function BulkDeleteManager({
             label: entry.status,
             className: 'bg-gray-800 text-gray-300 border-gray-700',
           }
-          const epText = formatEpisodeText(entry.type, entry.currentEpisode, entry.totalEpisodes)
+          const epText = formatEpisodeText(
+            entry.type,
+            entry.currentEpisode,
+            entry.totalEpisodes,
+            entry.currentSeason,
+            entry.totalSeasons
+          )
           const progressPct =
             entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
               ? Math.min(Math.round((entry.currentEpisode / entry.totalEpisodes) * 100), 100)
               : null
+          const typeIcon = TYPE_ICONS[entry.type] || '🎬'
 
           return (
             <div
@@ -196,7 +211,8 @@ export default function BulkDeleteManager({
 
               <div className="space-y-3">
                 <div className="flex gap-4">
-                  {entry.posterUrl ? (
+                  {/* Opsi B: Hanya tampilkan bingkai gambar jika posterUrl benar-benar ada */}
+                  {entry.posterUrl && (
                     <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-surface-hover shadow-sm">
                       <Image
                         src={entry.posterUrl}
@@ -206,16 +222,13 @@ export default function BulkDeleteManager({
                         className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
                       />
                     </div>
-                  ) : (
-                    <div className="flex h-28 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-surface-hover text-xs font-bold text-muted uppercase">
-                      {entry.type}
-                    </div>
                   )}
 
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap pr-6">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-                        {entry.type}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span>{typeIcon}</span>
+                        <span>{entry.type}</span>
                       </span>
                       <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded border ${badge.className}`}>
                         {badge.label}
@@ -244,11 +257,12 @@ export default function BulkDeleteManager({
                       )}
                     </div>
 
+                    {/* Display dates: For FILM, only show Selesai date */}
                     <div className="flex items-center gap-3 text-[11px] text-muted/80 pt-0.5 flex-wrap">
-                      {entry.startedAt && (
+                      {entry.type !== 'FILM' && entry.startedAt && (
                         <span>Mulai {formatDateShort(entry.startedAt)}</span>
                       )}
-                      {entry.startedAt && entry.completedAt && <span>•</span>}
+                      {entry.type !== 'FILM' && entry.startedAt && entry.completedAt && <span>•</span>}
                       {entry.completedAt && (
                         <span>Selesai {formatDateShort(entry.completedAt)}</span>
                       )}

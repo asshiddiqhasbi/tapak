@@ -20,6 +20,8 @@ type Props = {
     posterUrl?: string | null
     totalEpisodes?: number | null
     currentEpisode?: number | null
+    totalSeasons?: number | null
+    currentSeason?: number | null
     status?: WatchStatus | null
     rating?: number | null
     notes?: string | null
@@ -46,6 +48,12 @@ export default function WatchEntryForm({ initialData }: Props) {
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
   const [rating, setRating] = useState<string>(initialData?.rating?.toString() ?? '')
   const [notes, setNotes] = useState<string>(initialData?.notes ?? '')
+  const [totalSeasons, setTotalSeasons] = useState(
+    initialData?.totalSeasons?.toString() ?? ''
+  )
+  const [currentSeason, setCurrentSeason] = useState(
+    initialData?.currentSeason?.toString() ?? '1'
+  )
   const [totalEpisodes, setTotalEpisodes] = useState(
     initialData?.totalEpisodes?.toString() ?? ''
   )
@@ -173,7 +181,9 @@ export default function WatchEntryForm({ initialData }: Props) {
 
     const parsedTotal = totalEpisodes ? parseInt(totalEpisodes) : undefined
     const parsedCurrent = status === 'PLAN_TO_WATCH' ? 0 : (currentEpisode ? parseInt(currentEpisode) : 0)
-    const parsedRating = rating ? parseInt(rating, 10) : null
+    const parsedTotalSeasons = totalSeasons ? parseInt(totalSeasons) : undefined
+    const parsedCurrentSeason = currentSeason ? parseInt(currentSeason) : 1
+    const parsedRating = rating ? parseFloat(rating) : null
 
     const payload = {
       title,
@@ -182,7 +192,9 @@ export default function WatchEntryForm({ initialData }: Props) {
       posterUrl: finalPosterUrl,
       totalEpisodes: type === 'FILM' ? undefined : parsedTotal,
       currentEpisode: type === 'FILM' ? 0 : parsedCurrent,
-      rating: parsedRating,
+      totalSeasons: type === 'FILM' ? undefined : parsedTotalSeasons,
+      currentSeason: type === 'FILM' ? undefined : parsedCurrentSeason,
+      rating: parsedRating && !isNaN(parsedRating) ? Math.min(Math.max(parsedRating, 0), 10) : null,
       notes: notes || null,
     }
 
@@ -335,37 +347,72 @@ export default function WatchEntryForm({ initialData }: Props) {
           </div>
         </div>
 
-        {/* Dynamic Episode Fields */}
+        {/* Dynamic Season & Episode Fields */}
         {type !== 'FILM' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                Total Episode (opsional)
-              </label>
-              <input
-                type="number"
-                value={totalEpisodes}
-                onChange={(e) => handleTotalEpisodesChange(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-                placeholder="Contoh: 12, 24..."
-                min={1}
-              />
-            </div>
-
-            {status !== 'PLAN_TO_WATCH' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                  Episode Terakhir Ditonton
+                  Total Season (opsional)
                 </label>
                 <input
                   type="number"
-                  value={currentEpisode}
-                  onChange={(e) => setCurrentEpisode(e.target.value)}
-                  min={0}
-                  max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
+                  value={totalSeasons}
+                  onChange={(e) => setTotalSeasons(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                  placeholder="Contoh: 5 Season"
+                  min={1}
                 />
               </div>
-            )}
+
+              {status !== 'PLAN_TO_WATCH' && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                    Season Saat Ini
+                  </label>
+                  <input
+                    type="number"
+                    value={currentSeason}
+                    onChange={(e) => setCurrentSeason(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                    min={1}
+                    max={totalSeasons && parseInt(totalSeasons) > 0 ? parseInt(totalSeasons) : undefined}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                  Total Episode (opsional)
+                </label>
+                <input
+                  type="number"
+                  value={totalEpisodes}
+                  onChange={(e) => handleTotalEpisodesChange(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                  placeholder="Contoh: 62 episode"
+                  min={1}
+                />
+              </div>
+
+              {status !== 'PLAN_TO_WATCH' && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                    Episode Terakhir Ditonton
+                  </label>
+                  <input
+                    type="number"
+                    value={currentEpisode}
+                    onChange={(e) => setCurrentEpisode(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                    min={0}
+                    max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -374,25 +421,59 @@ export default function WatchEntryForm({ initialData }: Props) {
           <div className="space-y-4 pt-1">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
-                <span>Rating Personal (1 - 10)</span>
+                <span>Rating Personal (Format Desimal, e.g. 8.5)</span>
                 {status === 'COMPLETED' && (
                   <span className="text-[10px] text-accent font-normal border border-accent/30 bg-accent-muted px-2 py-0.5 rounded-full">
                     ✨ Direkomendasikan untuk tontonan Selesai
                   </span>
                 )}
               </label>
-              <select
-                value={rating}
-                onChange={(e) => setRating(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-              >
-                <option value="">-- Belum Dinilai --</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <option key={num} value={num.toString()}>
-                    ★ {num} / 10
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="10"
+                    value={rating}
+                    onChange={(e) => setRating(e.target.value)}
+                    placeholder="Contoh: 8.5 (1.0 - 10.0)"
+                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+                  />
+                  {rating && (
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-amber-400">
+                      ★ {rating} / 10
+                    </span>
+                  )}
+                </div>
+                {/* Preset quick buttons */}
+                <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                  <span className="text-muted text-[10px]">Preset:</span>
+                  {['7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setRating(preset)}
+                      className={`px-2 py-0.5 rounded-md border transition-colors ${
+                        rating === preset
+                          ? 'border-amber-500/80 bg-amber-950/60 text-amber-300 font-semibold'
+                          : 'border-border/60 bg-surface-hover text-muted hover:text-foreground'
+                      }`}
+                    >
+                      ★ {preset}
+                    </button>
+                  ))}
+                  {rating && (
+                    <button
+                      type="button"
+                      onClick={() => setRating('')}
+                      className="px-2 py-0.5 rounded-md text-muted hover:text-rose-400 transition-colors"
+                    >
+                      Hapus
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>

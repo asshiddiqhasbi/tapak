@@ -11,6 +11,8 @@ type Props = {
   type: string
   currentEpisode: number
   totalEpisodes: number | null
+  currentSeason?: number | null
+  totalSeasons?: number | null
   status: string
   rating?: number | null
   notes?: string | null
@@ -29,6 +31,8 @@ export default function ProgressControl({
   type,
   currentEpisode,
   totalEpisodes,
+  currentSeason = 1,
+  totalSeasons = null,
   status,
   rating = null,
   notes = null,
@@ -36,6 +40,7 @@ export default function ProgressControl({
   const router = useRouter()
 
   const [episode, setEpisode] = useState(currentEpisode)
+  const [season, setSeason] = useState(currentSeason ?? 1)
   const [selectedStatus, setSelectedStatus] = useState(status)
   const [selectedRating, setSelectedRating] = useState<string>(rating ? rating.toString() : '')
   const [noteText, setNoteText] = useState(notes ?? '')
@@ -46,10 +51,11 @@ export default function ProgressControl({
 
   useEffect(() => {
     setEpisode(currentEpisode)
+    setSeason(currentSeason ?? 1)
     setSelectedStatus(status)
     setSelectedRating(rating ? rating.toString() : '')
     setNoteText(notes ?? '')
-  }, [currentEpisode, status, rating, notes])
+  }, [currentEpisode, currentSeason, status, rating, notes])
 
   async function handleSaveAll() {
     setLoading(true)
@@ -61,13 +67,14 @@ export default function ProgressControl({
       ep = totalEpisodes
     }
 
-    const numericRating = selectedRating ? parseInt(selectedRating, 10) : null
+    const numericRating = selectedRating ? parseFloat(selectedRating) : null
 
     try {
       await updateProgress(id, {
         currentEpisode: ep,
+        currentSeason: season,
         status: selectedStatus,
-        rating: numericRating,
+        rating: numericRating && !isNaN(numericRating) ? Math.min(Math.max(numericRating, 0), 10) : null,
         notes: noteText,
       })
       router.push('/library')
@@ -82,13 +89,15 @@ export default function ProgressControl({
     setLoading(true)
     setMessage(null)
     const targetEp = totalEpisodes && totalEpisodes > 0 ? totalEpisodes : episode
-    const numericRating = selectedRating ? parseInt(selectedRating, 10) : null
+    const targetSeason = totalSeasons && totalSeasons > 0 ? totalSeasons : season
+    const numericRating = selectedRating ? parseFloat(selectedRating) : null
 
     try {
       await updateProgress(id, {
         currentEpisode: targetEp,
+        currentSeason: targetSeason,
         status: 'COMPLETED',
-        rating: numericRating,
+        rating: numericRating && !isNaN(numericRating) ? Math.min(Math.max(numericRating, 0), 10) : null,
         notes: noteText,
       })
       router.push('/library')
@@ -216,32 +225,56 @@ export default function ProgressControl({
         </select>
       </div>
 
-      {/* Update Progress Episode (Hidden for FILM) */}
+      {/* Update Progress Season & Episode (Hidden for FILM) */}
       {type !== 'FILM' && (
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-            Progress Episode ({episodeText})
-          </label>
-          <div className="flex items-center gap-2 flex-wrap">
-            <input
-              type="number"
-              value={episode}
-              onChange={(e) => setEpisode(parseInt(e.target.value) || 0)}
-              className="w-24 rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
-              min={0}
-              max={totalEpisodes && totalEpisodes > 0 ? totalEpisodes : undefined}
-            />
-            <span className="text-sm font-medium text-muted">
-              / {totalEpisodes && totalEpisodes > 0 ? `${totalEpisodes} eps` : 'Ongoing'}
-            </span>
-            <button
-              type="button"
-              onClick={handlePlusOne}
-              disabled={isPlusOneDisabled}
-              className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm"
-            >
-              +1 Episode
-            </button>
+        <div className="space-y-4">
+          {/* Season input if totalSeasons > 1 or user wants to set season */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Season Saat Ini
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={season}
+                onChange={(e) => setSeason(parseInt(e.target.value) || 1)}
+                disabled={loading}
+                className="w-24 rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
+                min={1}
+                max={totalSeasons && totalSeasons > 0 ? totalSeasons : undefined}
+              />
+              <span className="text-sm font-medium text-muted">
+                / {totalSeasons && totalSeasons > 0 ? `${totalSeasons} Season` : 'Season'}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Progress Episode ({episodeText})
+            </label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="number"
+                value={episode}
+                onChange={(e) => setEpisode(parseInt(e.target.value) || 0)}
+                disabled={loading}
+                className="w-24 rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
+                min={0}
+                max={totalEpisodes && totalEpisodes > 0 ? totalEpisodes : undefined}
+              />
+              <span className="text-sm font-medium text-muted">
+                / {totalEpisodes && totalEpisodes > 0 ? `${totalEpisodes} eps` : 'Ongoing'}
+              </span>
+              <button
+                type="button"
+                onClick={handlePlusOne}
+                disabled={isPlusOneDisabled}
+                className="rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm"
+              >
+                +1 Episode
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -249,21 +282,56 @@ export default function ProgressControl({
       {/* Update Rating */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-          Rating Personal (1 - 10)
+          Rating Personal (Format Desimal, e.g. 8.5)
         </label>
-        <select
-          value={selectedRating}
-          onChange={(e) => setSelectedRating(e.target.value)}
-          disabled={loading}
-          className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
-        >
-          <option value="">-- Belum Dinilai --</option>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-            <option key={num} value={num.toString()}>
-              ★ {num} / 10
-            </option>
-          ))}
-        </select>
+        <div className="space-y-2">
+          <div className="relative">
+            <input
+              type="number"
+              step="0.1"
+              min="1"
+              max="10"
+              value={selectedRating}
+              onChange={(e) => setSelectedRating(e.target.value)}
+              disabled={loading}
+              placeholder="Contoh: 8.5 (1.0 - 10.0)"
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+            />
+            {selectedRating && (
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-amber-400">
+                ★ {selectedRating} / 10
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+            <span className="text-muted text-[10px]">Preset:</span>
+            {['7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setSelectedRating(preset)}
+                disabled={loading}
+                className={`px-2 py-0.5 rounded-md border transition-colors ${
+                  selectedRating === preset
+                    ? 'border-amber-500/80 bg-amber-950/60 text-amber-300 font-semibold'
+                    : 'border-border/60 bg-surface-hover text-muted hover:text-foreground'
+                }`}
+              >
+                ★ {preset}
+              </button>
+            ))}
+            {selectedRating && (
+              <button
+                type="button"
+                onClick={() => setSelectedRating('')}
+                disabled={loading}
+                className="px-2 py-0.5 rounded-md text-muted hover:text-rose-400 transition-colors"
+              >
+                Hapus
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Update Notes */}

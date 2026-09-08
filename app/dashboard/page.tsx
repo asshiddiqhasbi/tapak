@@ -39,6 +39,12 @@ export default async function DashboardPage() {
   const totalEpisodesWatched = episodeSum._sum.currentEpisode ?? 0
   const username = dbUser?.username ?? 'Penonton'
 
+  const TYPE_ICONS: Record<string, string> = {
+    FILM: '🎬',
+    SERIES: '📺',
+    ANIME: '🍿',
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-12">
       {/* Header & Personal Greeting */}
@@ -102,11 +108,18 @@ export default async function DashboardPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {continueWatching.map((entry) => {
-              const epText = formatEpisodeText(entry.type, entry.currentEpisode, entry.totalEpisodes)
+              const epText = formatEpisodeText(
+                entry.type,
+                entry.currentEpisode,
+                entry.totalEpisodes,
+                entry.currentSeason,
+                entry.totalSeasons
+              )
               const progressPct =
                 entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
                   ? Math.min(Math.round((entry.currentEpisode / entry.totalEpisodes) * 100), 100)
                   : null
+              const typeIcon = TYPE_ICONS[entry.type] || '🎬'
 
               return (
                 <Link
@@ -115,8 +128,8 @@ export default async function DashboardPage() {
                   className="group flex flex-col justify-between rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-3 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
                 >
                   <div className="space-y-2.5">
-                    {/* Portrait Poster */}
-                    {entry.posterUrl ? (
+                    {/* Portrait Poster (Opsi B: Hanya tampilkan jika ada posterUrl) */}
+                    {entry.posterUrl && (
                       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-surface-hover shadow-inner">
                         <Image
                           src={entry.posterUrl}
@@ -126,15 +139,11 @@ export default async function DashboardPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
                         />
                       </div>
-                    ) : (
-                      <div className="flex aspect-[2/3] w-full items-center justify-center rounded-lg bg-surface-hover text-muted text-xs font-semibold uppercase">
-                        {entry.type}
-                      </div>
                     )}
 
                     <div>
                       <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-                        {entry.type}
+                        {typeIcon} {entry.type}
                       </span>
                       <h3 className="font-semibold text-foreground text-sm line-clamp-1 mt-1 group-hover:text-accent transition-colors">
                         {entry.title}
@@ -167,7 +176,7 @@ export default async function DashboardPage() {
             {continueWatching.length < 5 && (
               <Link
                 href="/library/new"
-                className="group flex flex-col items-center justify-center text-center rounded-xl border-2 border-dashed border-border/80 bg-surface/40 hover:bg-surface/70 hover:border-accent/60 transition-all duration-300 p-4 min-h-[220px] shadow-sm"
+                className="group flex flex-col items-center justify-center text-center rounded-xl border-2 border-dashed border-border/80 bg-surface/40 hover:bg-surface/70 hover:border-accent/60 transition-all duration-300 p-4 min-h-[160px] shadow-sm"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-muted text-accent font-bold text-xl group-hover:scale-110 transition-transform">
                   +
@@ -221,7 +230,14 @@ export default async function DashboardPage() {
                 label: entry.status,
                 className: 'bg-gray-800 text-gray-300 border-gray-700',
               }
-              const epText = formatEpisodeText(entry.type, entry.currentEpisode, entry.totalEpisodes)
+              const epText = formatEpisodeText(
+                entry.type,
+                entry.currentEpisode,
+                entry.totalEpisodes,
+                entry.currentSeason,
+                entry.totalSeasons
+              )
+              const typeIcon = TYPE_ICONS[entry.type] || '🎬'
 
               return (
                 <Link
@@ -229,7 +245,7 @@ export default async function DashboardPage() {
                   href={`/library/${entry.id}`}
                   className="group flex items-center gap-4 rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-3.5 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
                 >
-                  {entry.posterUrl ? (
+                  {entry.posterUrl && (
                     <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-md bg-surface-hover shadow-sm">
                       <Image
                         src={entry.posterUrl}
@@ -239,15 +255,12 @@ export default async function DashboardPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                  ) : (
-                    <div className="flex h-16 w-12 flex-shrink-0 items-center justify-center rounded-md bg-surface-hover text-[10px] text-muted font-semibold">
-                      {entry.type}
-                    </div>
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-semibold uppercase text-muted tracking-wider">
-                      {entry.type}
+                    <span className="text-[10px] font-semibold uppercase text-accent tracking-wider flex items-center gap-1">
+                      <span>{typeIcon}</span>
+                      <span>{entry.type}</span>
                     </span>
                     <h3 className="font-semibold text-foreground text-sm truncate group-hover:text-accent transition-colors">
                       {entry.title}
