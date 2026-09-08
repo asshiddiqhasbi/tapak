@@ -124,6 +124,35 @@ export default async function WatchEntryDetailPage({
         </div>
       </div>
 
+      {/* Modul Rincian Season */}
+      {Array.isArray(entry.seasonsDetail) && (entry.seasonsDetail as any[]).length > 0 && (
+        <div className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-4 space-y-3 shadow-xl shadow-black/30">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
+              <span>📺 Rincian Season & Episode</span>
+            </h3>
+            <span className="text-[11px] text-accent font-medium">
+              {(entry.seasonsDetail as any[]).length} Season • {entry.totalEpisodes} Episode Total
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+            {(entry.seasonsDetail as { seasonNumber: number; episodes: number }[]).map((s) => (
+              <div
+                key={s.seasonNumber}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs ${
+                  entry.currentSeason === s.seasonNumber
+                    ? 'border-accent/60 bg-accent-muted/20 text-accent font-semibold'
+                    : 'border-border/60 bg-surface-hover/50 text-foreground'
+                }`}
+              >
+                <span>Season {s.seasonNumber}</span>
+                <span className="text-muted text-[11px] font-medium">{s.episodes} eps</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Control Update Progress, Status, Rating & Notes */}
       <ProgressControl
         id={entry.id}

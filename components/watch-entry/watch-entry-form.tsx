@@ -22,6 +22,7 @@ type Props = {
     currentEpisode?: number | null
     totalSeasons?: number | null
     currentSeason?: number | null
+    seasonsDetail?: any
     status?: WatchStatus | null
     rating?: number | null
     notes?: string | null
@@ -61,6 +62,20 @@ export default function WatchEntryForm({ initialData }: Props) {
     initialData?.currentEpisode?.toString() ?? '0'
   )
 
+  // Dynamic Season Breakdown state
+  const initialSeasonsDetail = Array.isArray(initialData?.seasonsDetail)
+    ? (initialData.seasonsDetail as { seasonNumber: number; episodes: number }[])
+    : []
+  const [showSeasonBreakdown, setShowSeasonBreakdown] = useState(initialSeasonsDetail.length > 0)
+  const [seasonsList, setSeasonsList] = useState<{ seasonNumber: number; episodes: number }[]>(
+    initialSeasonsDetail.length > 0
+      ? initialSeasonsDetail
+      : [
+          { seasonNumber: 1, episodes: 12 },
+          { seasonNumber: 2, episodes: 12 },
+        ]
+  )
+
   const [posterUrl] = useState(initialData?.posterUrl ?? '')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [filePreview, setFilePreview] = useState<string | null>(null)
@@ -69,6 +84,29 @@ export default function WatchEntryForm({ initialData }: Props) {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function handleAddSeasonRow() {
+    setSeasonsList((prev) => [
+      ...prev,
+      { seasonNumber: prev.length + 1, episodes: 12 },
+    ])
+  }
+
+  function handleRemoveSeasonRow(index: number) {
+    setSeasonsList((prev) => {
+      const updated = prev.filter((_, i) => i !== index)
+      return updated.map((item, idx) => ({ ...item, seasonNumber: idx + 1 }))
+    })
+  }
+
+  function handleSeasonEpisodesChange(index: number, valStr: string) {
+    const val = parseInt(valStr) || 0
+    setSeasonsList((prev) => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], episodes: val }
+      return updated
+    })
+  }
 
   function handleStatusChange(newStatus: WatchStatus) {
     setStatus(newStatus)
@@ -179,9 +217,17 @@ export default function WatchEntryForm({ initialData }: Props) {
       }
     }
 
-    const parsedTotal = totalEpisodes ? parseInt(totalEpisodes) : undefined
+    let finalSeasonsDetail: any = null
+    let finalTotalSeasons = totalSeasons ? parseInt(totalSeasons) : undefined
+    let finalTotalEpisodes = totalEpisodes ? parseInt(totalEpisodes) : undefined
+
+    if (type !== 'FILM' && showSeasonBreakdown && seasonsList.length > 0) {
+      finalSeasonsDetail = seasonsList
+      finalTotalSeasons = seasonsList.length
+      finalTotalEpisodes = seasonsList.reduce((acc, s) => acc + (s.episodes || 0), 0)
+    }
+
     const parsedCurrent = status === 'PLAN_TO_WATCH' ? 0 : (currentEpisode ? parseInt(currentEpisode) : 0)
-    const parsedTotalSeasons = totalSeasons ? parseInt(totalSeasons) : undefined
     const parsedCurrentSeason = currentSeason ? parseInt(currentSeason) : 1
     const parsedRating = rating ? parseFloat(rating) : null
 
@@ -190,10 +236,11 @@ export default function WatchEntryForm({ initialData }: Props) {
       type,
       status,
       posterUrl: finalPosterUrl,
-      totalEpisodes: type === 'FILM' ? undefined : parsedTotal,
+      totalEpisodes: type === 'FILM' ? undefined : finalTotalEpisodes,
       currentEpisode: type === 'FILM' ? 0 : parsedCurrent,
-      totalSeasons: type === 'FILM' ? undefined : parsedTotalSeasons,
+      totalSeasons: type === 'FILM' ? undefined : finalTotalSeasons,
       currentSeason: type === 'FILM' ? undefined : parsedCurrentSeason,
+      seasonsDetail: type === 'FILM' ? null : finalSeasonsDetail,
       rating: parsedRating && !isNaN(parsedRating) ? Math.min(Math.max(parsedRating, 0), 10) : null,
       notes: notes || null,
     }
@@ -350,69 +397,152 @@ export default function WatchEntryForm({ initialData }: Props) {
         {/* Dynamic Season & Episode Fields */}
         {type !== 'FILM' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Season Saat Ini (Hanya jika bukan Plan to Watch) */}
+            {status !== 'PLAN_TO_WATCH' && (
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                  Total Season (opsional)
+                  Season Saat Ini
                 </label>
                 <input
                   type="number"
-                  value={totalSeasons}
-                  onChange={(e) => setTotalSeasons(e.target.value)}
+                  value={currentSeason}
+                  onChange={(e) => setCurrentSeason(e.target.value)}
                   className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-                  placeholder="Contoh: 5 Season"
                   min={1}
+                  max={showSeasonBreakdown ? seasonsList.length : (totalSeasons && parseInt(totalSeasons) > 0 ? parseInt(totalSeasons) : undefined)}
+                  placeholder="Contoh: 1, 2, 3..."
                 />
               </div>
+            )}
 
-              {status !== 'PLAN_TO_WATCH' && (
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                    Season Saat Ini
-                  </label>
-                  <input
-                    type="number"
-                    value={currentSeason}
-                    onChange={(e) => setCurrentSeason(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-                    min={1}
-                    max={totalSeasons && parseInt(totalSeasons) > 0 ? parseInt(totalSeasons) : undefined}
-                  />
+            {!showSeasonBreakdown ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                      Total Episode (opsional)
+                    </label>
+                    <input
+                      type="number"
+                      value={totalEpisodes}
+                      onChange={(e) => handleTotalEpisodesChange(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                      placeholder="Contoh: 12, 24, 62..."
+                      min={1}
+                    />
+                  </div>
+
+                  {status !== 'PLAN_TO_WATCH' && (
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                        Episode Terakhir Ditonton
+                      </label>
+                      <input
+                        type="number"
+                        value={currentEpisode}
+                        onChange={(e) => setCurrentEpisode(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                        min={0}
+                        max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                  Total Episode (opsional)
-                </label>
-                <input
-                  type="number"
-                  value={totalEpisodes}
-                  onChange={(e) => handleTotalEpisodesChange(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-                  placeholder="Contoh: 62 episode"
-                  min={1}
-                />
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSeasonBreakdown(true)
+                      if (seasonsList.length === 0) {
+                        setSeasonsList([
+                          { seasonNumber: 1, episodes: 12 },
+                          { seasonNumber: 2, episodes: 12 },
+                        ])
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium"
+                  >
+                    <span>+ Rincian Per Season (jika lebih dari 1 season)</span>
+                  </button>
+                </div>
               </div>
-
-              {status !== 'PLAN_TO_WATCH' && (
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                    Episode Terakhir Ditonton
-                  </label>
-                  <input
-                    type="number"
-                    value={currentEpisode}
-                    onChange={(e) => setCurrentEpisode(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
-                    min={0}
-                    max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
-                  />
+            ) : (
+              <div className="rounded-xl border border-accent/30 bg-accent-muted/10 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-accent block">
+                      Rincian Episode Per Season
+                    </span>
+                    <span className="text-[11px] text-muted block">
+                      Total otomatis: {seasonsList.reduce((acc, s) => acc + (s.episodes || 0), 0)} episode ({seasonsList.length} season)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSeasonBreakdown(false)}
+                    className="text-xs text-muted hover:text-foreground font-medium underline"
+                  >
+                    Hapus Rincian Season
+                  </button>
                 </div>
-              )}
-            </div>
+
+                <div className="space-y-2.5">
+                  {seasonsList.map((sItem, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-foreground w-20 flex-shrink-0">
+                        Season {sItem.seasonNumber}
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={sItem.episodes || ''}
+                        onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
+                        placeholder="Jumlah episode"
+                        className="flex-1 rounded-lg border border-border bg-surface-hover px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+                      />
+                      <span className="text-xs text-muted">eps</span>
+                      {seasonsList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSeasonRow(index)}
+                          className="p-1 text-muted hover:text-rose-400 transition-colors"
+                          title="Hapus Season Ini"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-1 flex items-center justify-between border-t border-border/40">
+                  <button
+                    type="button"
+                    onClick={handleAddSeasonRow}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                  >
+                    + Tambah Season {seasonsList.length + 1}
+                  </button>
+                </div>
+
+                {status !== 'PLAN_TO_WATCH' && (
+                  <div className="pt-2 border-t border-border/60">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                      Episode Terakhir Ditonton (Akumulasi / Per Season)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentEpisode}
+                      onChange={(e) => setCurrentEpisode(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                      min={0}
+                      max={seasonsList.reduce((acc, s) => acc + (s.episodes || 0), 0) || undefined}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

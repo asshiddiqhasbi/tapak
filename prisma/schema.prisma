@@ -46,6 +46,7 @@ model WatchEntry {
   currentEpisode  Int         @default(0)
   totalSeasons    Int?
   currentSeason   Int?        @default(1)
+  seasonsDetail   Json?
   status          WatchStatus
   rating          Float?
   notes           String?

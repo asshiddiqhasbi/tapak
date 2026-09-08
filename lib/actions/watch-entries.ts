@@ -63,6 +63,7 @@ export async function createWatchEntry(formData: {
   currentEpisode?: number
   totalSeasons?: number
   currentSeason?: number
+  seasonsDetail?: any
   status?: string
   rating?: number | null
   notes?: string | null
@@ -92,6 +93,7 @@ export async function createWatchEntry(formData: {
       currentEpisode,
       totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons || null),
       currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason || 1),
+      seasonsDetail: formData.type === 'FILM' ? null : (formData.seasonsDetail || null),
       status: status as any,
       rating: formData.rating !== undefined ? formData.rating : null,
       notes: formData.notes !== undefined ? formData.notes : null,
@@ -114,6 +116,7 @@ export async function updateWatchEntry(
     currentEpisode?: number
     totalSeasons?: number
     currentSeason?: number
+    seasonsDetail?: any
     status?: string
     rating?: number | null
     notes?: string | null
@@ -145,6 +148,7 @@ export async function updateWatchEntry(
       currentEpisode: formData.type === 'FILM' ? 0 : (formData.currentEpisode !== undefined ? formData.currentEpisode : entry.currentEpisode),
       totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons !== undefined ? formData.totalSeasons : entry.totalSeasons),
       currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason !== undefined ? formData.currentSeason : entry.currentSeason),
+      seasonsDetail: formData.type === 'FILM' ? null : (formData.seasonsDetail !== undefined ? formData.seasonsDetail : (entry.seasonsDetail as any)),
       status: nextStatus as any,
       rating: formData.rating !== undefined ? formData.rating : entry.rating,
       notes: formData.notes !== undefined ? formData.notes : entry.notes,
