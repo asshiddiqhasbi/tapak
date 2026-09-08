@@ -151,3 +151,20 @@ export async function deleteWatchEntry(id: string) {
   revalidatePath('/library')
   revalidatePath('/dashboard')
 }
+
+export async function deleteMultipleWatchEntries(ids: string[]) {
+  if (!ids.length) return
+
+  const user = await getCurrentUser()
+
+  await prisma.watchEntry.deleteMany({
+    where: {
+      id: { in: ids },
+      userId: user.id,
+    },
+  })
+
+  revalidatePath('/library')
+  revalidatePath('/dashboard')
+}
+
