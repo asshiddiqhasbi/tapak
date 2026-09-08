@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
+import { calculateGeneralStats, type SeasonDetailItem } from '@/lib/utils'
 
 async function getCurrentUser() {
   const supabase = await createClient()
@@ -55,6 +56,93 @@ export async function updateProgress(
   revalidatePath('/dashboard')
 }
 
+export async function updateSeasonDetail(
+  id: string,
+  seasonNumber: number,
+  data: {
+    status?: string
+    currentEpisode?: number
+    rating?: number | null
+    notes?: string | null
+  }
+) {
+  const user = await getCurrentUser()
+
+  const entry = await prisma.watchEntry.findUnique({ where: { id } })
+  if (!entry || entry.userId !== user.id) throw new Error('Forbidden')
+
+  let seasons: SeasonDetailItem[] = Array.isArray(entry.seasonsDetail)
+    ? (entry.seasonsDetail as unknown as SeasonDetailItem[])
+    : []
+
+  if (seasons.length === 0) {
+    // Fallback if no seasonsDetail yet
+    const totalS = entry.totalSeasons || 1
+    const totalE = entry.totalEpisodes || 12
+    const epsPerSeason = Math.max(1, Math.floor(totalE / totalS))
+    seasons = Array.from({ length: totalS }, (_, idx) => ({
+      seasonNumber: idx + 1,
+      episodes: epsPerSeason,
+      currentEpisode: idx + 1 === entry.currentSeason ? entry.currentEpisode : (entry.status === 'COMPLETED' ? epsPerSeason : 0),
+      status: idx + 1 === entry.currentSeason ? entry.status : (entry.status === 'COMPLETED' ? 'COMPLETED' : 'PLAN_TO_WATCH'),
+      rating: idx + 1 === entry.currentSeason ? entry.rating : null,
+      notes: idx + 1 === entry.currentSeason ? entry.notes : null,
+    }))
+  }
+
+  const seasonIdx = seasons.findIndex((s) => s.seasonNumber === seasonNumber)
+  if (seasonIdx !== -1) {
+    const targetSeason = seasons[seasonIdx]
+    const nextStatus = data.status !== undefined ? data.status : targetSeason.status
+    let nextCurrentEp = data.currentEpisode !== undefined ? data.currentEpisode : targetSeason.currentEpisode
+
+    if (nextStatus === 'COMPLETED') {
+      nextCurrentEp = targetSeason.episodes
+    } else if (nextStatus === 'PLAN_TO_WATCH') {
+      nextCurrentEp = 0
+    }
+
+    seasons[seasonIdx] = {
+      ...targetSeason,
+      status: nextStatus,
+      currentEpisode: Math.min(Math.max(nextCurrentEp, 0), targetSeason.episodes),
+      rating: data.rating !== undefined ? data.rating : targetSeason.rating,
+      notes: data.notes !== undefined ? data.notes : targetSeason.notes,
+    }
+  }
+
+  const stats = calculateGeneralStats(seasons)
+
+  let startedAt = entry.startedAt
+  if (stats.generalStatus !== 'PLAN_TO_WATCH' && !startedAt) {
+    startedAt = new Date()
+  }
+
+  let completedAt = entry.completedAt
+  if (stats.generalStatus === 'COMPLETED' && !completedAt) {
+    completedAt = new Date()
+  }
+
+  await prisma.watchEntry.update({
+    where: { id },
+    data: {
+      seasonsDetail: seasons as any,
+      rating: stats.generalRating,
+      status: stats.generalStatus as any,
+      currentEpisode: stats.totalCurrentEpisodes,
+      totalEpisodes: stats.totalEpisodes,
+      totalSeasons: seasons.length,
+      currentSeason: stats.activeSeasonNumber,
+      startedAt,
+      completedAt,
+    },
+  })
+
+  revalidatePath('/library')
+  revalidatePath(`/library/${id}`)
+  revalidatePath('/dashboard')
+}
+
 export async function createWatchEntry(formData: {
   title: string
   type: 'ANIME' | 'SERIES' | 'FILM'
@@ -73,6 +161,20 @@ export async function createWatchEntry(formData: {
   const status = formData.status || 'PLAN_TO_WATCH'
   const currentEpisode = formData.type === 'FILM' ? 0 : (formData.currentEpisode ?? 0)
 
+  let seasonsDetail = formData.seasonsDetail
+  if (formData.type !== 'FILM' && Array.isArray(seasonsDetail) && seasonsDetail.length > 0) {
+    seasonsDetail = seasonsDetail.map((s: any) => ({
+      seasonNumber: s.seasonNumber,
+      episodes: s.episodes,
+      currentEpisode: status === 'COMPLETED' ? s.episodes : 0,
+      status: status,
+      rating: formData.rating || null,
+      notes: null,
+    }))
+  } else {
+    seasonsDetail = null
+  }
+
   let startedAt: Date | null = null
   if (formData.type !== 'FILM' && status !== 'PLAN_TO_WATCH') {
     startedAt = new Date()
@@ -83,19 +185,21 @@ export async function createWatchEntry(formData: {
     completedAt = new Date()
   }
 
+  const initialStats = seasonsDetail ? calculateGeneralStats(seasonsDetail) : null
+
   await prisma.watchEntry.create({
     data: {
       userId: user.id,
       title: formData.title,
       type: formData.type,
       posterUrl: formData.posterUrl || null,
-      totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
-      currentEpisode,
-      totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons || null),
-      currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason || 1),
-      seasonsDetail: formData.type === 'FILM' ? null : (formData.seasonsDetail || null),
-      status: status as any,
-      rating: formData.rating !== undefined ? formData.rating : null,
+      totalEpisodes: formData.type === 'FILM' ? null : (initialStats?.totalEpisodes ?? formData.totalEpisodes ?? null),
+      currentEpisode: formData.type === 'FILM' ? 0 : (initialStats?.totalCurrentEpisodes ?? currentEpisode),
+      totalSeasons: formData.type === 'FILM' ? null : (initialStats ? seasonsDetail.length : (formData.totalSeasons || null)),
+      currentSeason: formData.type === 'FILM' ? null : (initialStats?.activeSeasonNumber ?? formData.currentSeason ?? 1),
+      seasonsDetail: formData.type === 'FILM' ? null : seasonsDetail,
+      status: (initialStats?.generalStatus ?? status) as any,
+      rating: initialStats ? initialStats.generalRating : (formData.rating !== undefined ? formData.rating : null),
       notes: formData.notes !== undefined ? formData.notes : null,
       startedAt,
       completedAt,

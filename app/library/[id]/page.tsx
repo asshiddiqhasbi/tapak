@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase-server'
 import ProgressControl from '@/components/watch-entry/progress-control'
+import SeasonTabControl from '@/components/watch-entry/season-tab-control'
 import DeleteButton from '@/components/watch-entry/delete-button'
-import { formatEpisodeText } from '@/lib/utils'
+import { formatEpisodeText, type SeasonDetailItem } from '@/lib/utils'
 
 export default async function WatchEntryDetailPage({
   params,
@@ -35,6 +36,25 @@ export default async function WatchEntryDetailPage({
     ANIME: '🍿',
   }
   const typeIcon = TYPE_ICONS[entry.type] || '🎬'
+
+  let seasonsDetail: SeasonDetailItem[] | null = null
+  if (entry.type !== 'FILM') {
+    if (Array.isArray(entry.seasonsDetail) && (entry.seasonsDetail as any[]).length > 0) {
+      seasonsDetail = entry.seasonsDetail as unknown as SeasonDetailItem[]
+    } else {
+      const totalS = entry.totalSeasons || 1
+      const totalE = entry.totalEpisodes || 12
+      const epsPerSeason = Math.max(1, Math.floor(totalE / totalS))
+      seasonsDetail = Array.from({ length: totalS }, (_, idx) => ({
+        seasonNumber: idx + 1,
+        episodes: epsPerSeason,
+        currentEpisode: idx + 1 === (entry.currentSeason || 1) ? entry.currentEpisode : (entry.status === 'COMPLETED' ? epsPerSeason : 0),
+        status: idx + 1 === (entry.currentSeason || 1) ? entry.status : (entry.status === 'COMPLETED' ? 'COMPLETED' : 'PLAN_TO_WATCH'),
+        rating: idx + 1 === (entry.currentSeason || 1) ? entry.rating : null,
+        notes: idx + 1 === (entry.currentSeason || 1) ? entry.notes : null,
+      }))
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 space-y-6">
@@ -124,47 +144,26 @@ export default async function WatchEntryDetailPage({
         </div>
       </div>
 
-      {/* Modul Rincian Season */}
-      {Array.isArray(entry.seasonsDetail) && (entry.seasonsDetail as any[]).length > 0 && (
-        <div className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-4 space-y-3 shadow-xl shadow-black/30">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
-              <span>📺 Rincian Season & Episode</span>
-            </h3>
-            <span className="text-[11px] text-accent font-medium">
-              {(entry.seasonsDetail as any[]).length} Season • {entry.totalEpisodes} Episode Total
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-            {(entry.seasonsDetail as { seasonNumber: number; episodes: number }[]).map((s) => (
-              <div
-                key={s.seasonNumber}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs ${
-                  entry.currentSeason === s.seasonNumber
-                    ? 'border-accent/60 bg-accent-muted/20 text-accent font-semibold'
-                    : 'border-border/60 bg-surface-hover/50 text-foreground'
-                }`}
-              >
-                <span>Season {s.seasonNumber}</span>
-                <span className="text-muted text-[11px] font-medium">{s.episodes} eps</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Season Tab Control for Series/Anime OR Progress Control for Film */}
+      {entry.type !== 'FILM' && seasonsDetail ? (
+        <SeasonTabControl
+          id={entry.id}
+          seasons={seasonsDetail}
+          currentActiveSeasonNumber={entry.currentSeason || 1}
+        />
+      ) : (
+        <ProgressControl
+          id={entry.id}
+          type={entry.type}
+          currentEpisode={entry.currentEpisode}
+          totalEpisodes={entry.totalEpisodes}
+          currentSeason={entry.currentSeason}
+          totalSeasons={entry.totalSeasons}
+          status={entry.status}
+          rating={entry.rating}
+          notes={entry.notes}
+        />
       )}
-
-      {/* Control Update Progress, Status, Rating & Notes */}
-      <ProgressControl
-        id={entry.id}
-        type={entry.type}
-        currentEpisode={entry.currentEpisode}
-        totalEpisodes={entry.totalEpisodes}
-        currentSeason={entry.currentSeason}
-        totalSeasons={entry.totalSeasons}
-        status={entry.status}
-        rating={entry.rating}
-        notes={entry.notes}
-      />
     </div>
   )
 }
