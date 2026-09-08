@@ -60,6 +60,8 @@ export async function createWatchEntry(formData: {
   totalEpisodes?: number
   currentEpisode?: number
   status?: string
+  rating?: number | null
+  notes?: string | null
 }) {
   const user = await getCurrentUser()
 
@@ -85,6 +87,8 @@ export async function createWatchEntry(formData: {
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
       currentEpisode,
       status: status as any,
+      rating: formData.rating !== undefined ? formData.rating : null,
+      notes: formData.notes !== undefined ? formData.notes : null,
       startedAt,
       completedAt,
     },
@@ -103,6 +107,8 @@ export async function updateWatchEntry(
     totalEpisodes?: number
     currentEpisode?: number
     status?: string
+    rating?: number | null
+    notes?: string | null
   }
 ) {
   const user = await getCurrentUser()
@@ -130,6 +136,8 @@ export async function updateWatchEntry(
       totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
       currentEpisode: formData.type === 'FILM' ? 0 : (formData.currentEpisode !== undefined ? formData.currentEpisode : entry.currentEpisode),
       status: nextStatus as any,
+      rating: formData.rating !== undefined ? formData.rating : entry.rating,
+      notes: formData.notes !== undefined ? formData.notes : entry.notes,
       startedAt,
       completedAt,
     },

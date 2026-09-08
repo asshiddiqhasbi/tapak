@@ -28,6 +28,8 @@ export default async function EditWatchEntryPage({
           totalEpisodes: entry.totalEpisodes,
           currentEpisode: entry.currentEpisode,
           status: entry.status,
+          rating: entry.rating,
+          notes: entry.notes,
         }}
       />
     </div>

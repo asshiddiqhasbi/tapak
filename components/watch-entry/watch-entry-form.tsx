@@ -21,6 +21,8 @@ type Props = {
     totalEpisodes?: number | null
     currentEpisode?: number | null
     status?: WatchStatus | null
+    rating?: number | null
+    notes?: string | null
   }
 }
 
@@ -42,6 +44,8 @@ export default function WatchEntryForm({ initialData }: Props) {
   const [title, setTitle] = useState(initialData?.title ?? '')
   const [type, setType] = useState<WatchType>(initialData?.type ?? 'ANIME')
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
+  const [rating, setRating] = useState<string>(initialData?.rating?.toString() ?? '')
+  const [notes, setNotes] = useState<string>(initialData?.notes ?? '')
   const [totalEpisodes, setTotalEpisodes] = useState(
     initialData?.totalEpisodes?.toString() ?? ''
   )
@@ -169,6 +173,7 @@ export default function WatchEntryForm({ initialData }: Props) {
 
     const parsedTotal = totalEpisodes ? parseInt(totalEpisodes) : undefined
     const parsedCurrent = status === 'PLAN_TO_WATCH' ? 0 : (currentEpisode ? parseInt(currentEpisode) : 0)
+    const parsedRating = rating ? parseInt(rating, 10) : null
 
     const payload = {
       title,
@@ -177,6 +182,8 @@ export default function WatchEntryForm({ initialData }: Props) {
       posterUrl: finalPosterUrl,
       totalEpisodes: type === 'FILM' ? undefined : parsedTotal,
       currentEpisode: type === 'FILM' ? 0 : parsedCurrent,
+      rating: parsedRating,
+      notes: notes || null,
     }
 
     try {
@@ -354,12 +361,52 @@ export default function WatchEntryForm({ initialData }: Props) {
                   type="number"
                   value={currentEpisode}
                   onChange={(e) => setCurrentEpisode(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
                   min={0}
                   max={totalEpisodes && parseInt(totalEpisodes) > 0 ? parseInt(totalEpisodes) : undefined}
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Rating and Notes fields when status is COMPLETED or in progress */}
+        {status !== 'PLAN_TO_WATCH' && (
+          <div className="space-y-4 pt-1">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
+                <span>Rating Personal (1 - 10)</span>
+                {status === 'COMPLETED' && (
+                  <span className="text-[10px] text-accent font-normal border border-accent/30 bg-accent-muted px-2 py-0.5 rounded-full">
+                    ✨ Direkomendasikan untuk tontonan Selesai
+                  </span>
+                )}
+              </label>
+              <select
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+              >
+                <option value="">-- Belum Dinilai --</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <option key={num} value={num.toString()}>
+                    ★ {num} / 10
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                Catatan Pribadi (opsional)
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Tulis kesan, review singkat, atau pesan pribadi..."
+                rows={3}
+                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+              />
+            </div>
           </div>
         )}
 
