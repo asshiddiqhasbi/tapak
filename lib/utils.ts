@@ -54,9 +54,6 @@ export function calculateGeneralStats(seasons: SeasonDetailItem[]) {
 
   let completedCount = 0
   let planToWatchCount = 0
-  let droppedCount = 0
-  let activeSeasonNumber = 1
-  let foundActiveSeason = false
 
   for (const s of seasons) {
     totalEpisodes += s.episodes || 0
@@ -69,28 +66,48 @@ export function calculateGeneralStats(seasons: SeasonDetailItem[]) {
 
     if (s.status === 'COMPLETED') completedCount++
     else if (s.status === 'PLAN_TO_WATCH') planToWatchCount++
-    else if (s.status === 'DROPPED') droppedCount++
-
-    if (!foundActiveSeason && (s.status === 'WATCHING' || s.status === 'ON_HOLD')) {
-      activeSeasonNumber = s.seasonNumber
-      foundActiveSeason = true
-    }
-  }
-
-  if (!foundActiveSeason) {
-    const firstUnfinished = seasons.find((s) => s.status !== 'COMPLETED')
-    activeSeasonNumber = firstUnfinished ? firstUnfinished.seasonNumber : (seasons[0]?.seasonNumber || 1)
   }
 
   const generalRating = ratedCount > 0 ? parseFloat((ratingSum / ratedCount).toFixed(1)) : null
 
   let generalStatus = 'WATCHING'
-  if (completedCount === seasons.length) {
+  let activeSeasonNumber = 1
+
+  if (seasons.length === 1) {
+    generalStatus = seasons[0].status
+    activeSeasonNumber = seasons[0].seasonNumber
+  } else if (completedCount === seasons.length) {
     generalStatus = 'COMPLETED'
+    activeSeasonNumber = seasons[seasons.length - 1].seasonNumber
   } else if (planToWatchCount === seasons.length) {
     generalStatus = 'PLAN_TO_WATCH'
-  } else if (droppedCount === seasons.length) {
-    generalStatus = 'DROPPED'
+    activeSeasonNumber = 1
+  } else {
+    // Multi-season mixed status: find latest started / active season
+    const startedSeasons = seasons.filter(
+      (s) => s.status !== 'PLAN_TO_WATCH' || (s.currentEpisode || 0) > 0
+    )
+
+    if (startedSeasons.length === 0) {
+      generalStatus = 'PLAN_TO_WATCH'
+      activeSeasonNumber = 1
+    } else {
+      const latestSeason = startedSeasons[startedSeasons.length - 1]
+      activeSeasonNumber = latestSeason.seasonNumber
+
+      if (latestSeason.status === 'DROPPED') {
+        generalStatus = 'DROPPED'
+      } else if (latestSeason.status === 'ON_HOLD') {
+        generalStatus = 'ON_HOLD'
+      } else if (latestSeason.status === 'WATCHING') {
+        generalStatus = 'WATCHING'
+      } else if (latestSeason.status === 'COMPLETED') {
+        // Season ini completed, tapi season setelahnya masih plan to watch / belum selesai
+        generalStatus = 'WATCHING'
+      } else {
+        generalStatus = latestSeason.status
+      }
+    }
   }
 
   return {

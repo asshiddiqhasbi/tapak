@@ -119,8 +119,10 @@ export async function updateSeasonDetail(
   }
 
   let completedAt = entry.completedAt
-  if (stats.generalStatus === 'COMPLETED' && !completedAt) {
-    completedAt = new Date()
+  if (stats.generalStatus === 'COMPLETED') {
+    if (!completedAt) completedAt = new Date()
+  } else {
+    completedAt = null
   }
 
   await prisma.watchEntry.update({
@@ -175,17 +177,18 @@ export async function createWatchEntry(formData: {
     seasonsDetail = null
   }
 
+  const initialStats = seasonsDetail ? calculateGeneralStats(seasonsDetail) : null
+  const effectiveStatus = initialStats ? initialStats.generalStatus : status
+
   let startedAt: Date | null = null
-  if (formData.type !== 'FILM' && status !== 'PLAN_TO_WATCH') {
+  if (formData.type !== 'FILM' && effectiveStatus !== 'PLAN_TO_WATCH') {
     startedAt = new Date()
   }
 
   let completedAt: Date | null = null
-  if (status === 'COMPLETED') {
+  if (effectiveStatus === 'COMPLETED') {
     completedAt = new Date()
   }
-
-  const initialStats = seasonsDetail ? calculateGeneralStats(seasonsDetail) : null
 
   await prisma.watchEntry.create({
     data: {
@@ -198,7 +201,7 @@ export async function createWatchEntry(formData: {
       totalSeasons: formData.type === 'FILM' ? null : (initialStats ? seasonsDetail.length : (formData.totalSeasons || null)),
       currentSeason: formData.type === 'FILM' ? null : (initialStats?.activeSeasonNumber ?? formData.currentSeason ?? 1),
       seasonsDetail: formData.type === 'FILM' ? null : seasonsDetail,
-      status: (initialStats?.generalStatus ?? status) as any,
+      status: effectiveStatus as any,
       rating: initialStats ? initialStats.generalRating : (formData.rating !== undefined ? formData.rating : null),
       notes: formData.notes !== undefined ? formData.notes : null,
       startedAt,
@@ -238,8 +241,10 @@ export async function updateWatchEntry(
   }
 
   let completedAt = entry.completedAt
-  if (nextStatus === 'COMPLETED' && !completedAt) {
-    completedAt = new Date()
+  if (nextStatus === 'COMPLETED') {
+    if (!completedAt) completedAt = new Date()
+  } else {
+    completedAt = null
   }
 
   await prisma.watchEntry.update({
