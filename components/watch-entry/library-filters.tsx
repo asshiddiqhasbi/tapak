@@ -6,11 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 export default function LibraryFilters({
   currentStatus,
   currentType,
+  currentMedium,
   currentSort,
   currentQuery = '',
 }: {
   currentStatus: string
   currentType: string
+  currentMedium?: string
   currentSort: string
   currentQuery?: string
 }) {
@@ -74,11 +76,17 @@ export default function LibraryFilters({
     { value: 'DROPPED', label: 'Dropped' },
   ]
 
+  const mediums = [
+    { value: 'ALL', label: 'Semua Kategori' },
+    { value: 'ANIME', label: '🍿 Anime' },
+    { value: 'LIVE_ACTION', label: '📽 Live Action' },
+    { value: 'ANIMATION', label: '🎨 Animasi' },
+  ]
+
   const types = [
-    { value: 'ALL', label: 'Semua Tipe' },
-    { value: 'ANIME', label: 'Anime' },
-    { value: 'SERIES', label: 'Series' },
-    { value: 'FILM', label: 'Film' },
+    { value: 'ALL', label: 'Semua Format' },
+    { value: 'SERIES', label: '📺 Series' },
+    { value: 'FILM', label: '🎬 Film' },
   ]
 
   const sortOptions = [
@@ -166,8 +174,20 @@ export default function LibraryFilters({
           })}
         </div>
 
-        {/* Filter Type & Sort Dropdowns */}
+        {/* Filter Medium, Format & Sort Dropdowns */}
         <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/60">
+          <select
+            value={currentMedium || 'ALL'}
+            onChange={(e) => updateFilter('medium', e.target.value)}
+            className="rounded-xl border border-border/80 bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+          >
+            {mediums.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+
           <select
             value={currentType || 'ALL'}
             onChange={(e) => updateFilter('type', e.target.value)}

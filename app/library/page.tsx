@@ -8,9 +8,9 @@ import BulkDeleteManager from '@/components/watch-entry/bulk-delete-manager'
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; type?: string; sort?: string; q?: string; query?: string }>
+  searchParams: Promise<{ status?: string; type?: string; medium?: string; sort?: string; q?: string; query?: string }>
 }) {
-  const { status, type, sort, q, query } = await searchParams
+  const { status, type, medium, sort, q, query } = await searchParams
   const searchQuery = (q || query || '').trim()
 
   const supabase = await createClient()
@@ -24,6 +24,9 @@ export default async function LibraryPage({
   }
   if (type && type !== 'ALL') {
     whereClause.type = type
+  }
+  if (medium && medium !== 'ALL') {
+    whereClause.medium = medium
   }
   if (searchQuery) {
     whereClause.title = {
@@ -73,6 +76,7 @@ export default async function LibraryPage({
         <LibraryFilters
           currentStatus={status ?? 'ALL'}
           currentType={type ?? 'ALL'}
+          currentMedium={medium ?? 'ALL'}
           currentSort={sort ?? 'newest'}
           currentQuery={searchQuery}
         />

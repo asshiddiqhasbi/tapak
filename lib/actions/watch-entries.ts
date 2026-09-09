@@ -147,7 +147,8 @@ export async function updateSeasonDetail(
 
 export async function createWatchEntry(formData: {
   title: string
-  type: 'ANIME' | 'SERIES' | 'FILM'
+  type: 'SERIES' | 'FILM'
+  medium?: 'LIVE_ACTION' | 'ANIME' | 'ANIMATION'
   posterUrl?: string
   totalEpisodes?: number
   currentEpisode?: number
@@ -194,7 +195,8 @@ export async function createWatchEntry(formData: {
     data: {
       userId: user.id,
       title: formData.title,
-      type: formData.type,
+      type: formData.type as any,
+      medium: (formData.medium || 'LIVE_ACTION') as any,
       posterUrl: formData.posterUrl || null,
       totalEpisodes: formData.type === 'FILM' ? null : (initialStats?.totalEpisodes ?? formData.totalEpisodes ?? null),
       currentEpisode: formData.type === 'FILM' ? 0 : (initialStats?.totalCurrentEpisodes ?? currentEpisode),
@@ -217,7 +219,8 @@ export async function updateWatchEntry(
   id: string,
   formData: {
     title: string
-    type: 'ANIME' | 'SERIES' | 'FILM'
+    type: 'SERIES' | 'FILM'
+    medium?: 'LIVE_ACTION' | 'ANIME' | 'ANIMATION'
     posterUrl?: string
     totalEpisodes?: number
     currentEpisode?: number
@@ -234,7 +237,10 @@ export async function updateWatchEntry(
   const entry = await prisma.watchEntry.findUnique({ where: { id } })
   if (!entry || entry.userId !== user.id) throw new Error('Forbidden')
 
-  const nextStatus = formData.status ?? entry.status
+  const seasonsDetail = formData.type === 'FILM' ? null : (formData.seasonsDetail !== undefined ? formData.seasonsDetail : (entry.seasonsDetail as any))
+  const stats = seasonsDetail && Array.isArray(seasonsDetail) && seasonsDetail.length > 0 ? calculateGeneralStats(seasonsDetail) : null
+
+  const nextStatus = stats ? stats.generalStatus : (formData.status ?? entry.status)
   let startedAt = entry.startedAt
   if (formData.type !== 'FILM' && nextStatus !== 'PLAN_TO_WATCH' && !startedAt) {
     startedAt = new Date()
@@ -251,15 +257,16 @@ export async function updateWatchEntry(
     where: { id },
     data: {
       title: formData.title,
-      type: formData.type,
+      type: formData.type as any,
+      medium: formData.medium !== undefined ? (formData.medium as any) : entry.medium,
       posterUrl: formData.posterUrl !== undefined ? (formData.posterUrl || null) : entry.posterUrl,
-      totalEpisodes: formData.type === 'FILM' ? null : (formData.totalEpisodes || null),
-      currentEpisode: formData.type === 'FILM' ? 0 : (formData.currentEpisode !== undefined ? formData.currentEpisode : entry.currentEpisode),
-      totalSeasons: formData.type === 'FILM' ? null : (formData.totalSeasons !== undefined ? formData.totalSeasons : entry.totalSeasons),
-      currentSeason: formData.type === 'FILM' ? null : (formData.currentSeason !== undefined ? formData.currentSeason : entry.currentSeason),
-      seasonsDetail: formData.type === 'FILM' ? null : (formData.seasonsDetail !== undefined ? formData.seasonsDetail : (entry.seasonsDetail as any)),
+      totalEpisodes: formData.type === 'FILM' ? null : (stats ? stats.totalEpisodes : (formData.totalEpisodes || null)),
+      currentEpisode: formData.type === 'FILM' ? 0 : (stats ? stats.totalCurrentEpisodes : (formData.currentEpisode !== undefined ? formData.currentEpisode : entry.currentEpisode)),
+      totalSeasons: formData.type === 'FILM' ? null : (stats ? seasonsDetail.length : (formData.totalSeasons !== undefined ? formData.totalSeasons : entry.totalSeasons)),
+      currentSeason: formData.type === 'FILM' ? null : (stats ? stats.activeSeasonNumber : (formData.currentSeason !== undefined ? formData.currentSeason : entry.currentSeason)),
+      seasonsDetail,
       status: nextStatus as any,
-      rating: formData.rating !== undefined ? formData.rating : entry.rating,
+      rating: stats ? stats.generalRating : (formData.rating !== undefined ? formData.rating : entry.rating),
       notes: formData.notes !== undefined ? formData.notes : entry.notes,
       startedAt,
       completedAt,

@@ -42,7 +42,11 @@ export default async function DashboardPage() {
   const TYPE_ICONS: Record<string, string> = {
     FILM: '🎬',
     SERIES: '📺',
-    ANIME: '🍿',
+  }
+  const MEDIUM_BADGES: Record<string, { label: string; icon: string }> = {
+    ANIME: { label: 'Anime', icon: '🍿' },
+    LIVE_ACTION: { label: 'Live Action', icon: '📽' },
+    ANIMATION: { label: 'Animasi', icon: '🎨' },
   }
 
   return (
@@ -120,6 +124,7 @@ export default async function DashboardPage() {
                   ? Math.min(Math.round((entry.currentEpisode / entry.totalEpisodes) * 100), 100)
                   : null
               const typeIcon = TYPE_ICONS[entry.type] || '🎬'
+              const mediumInfo = MEDIUM_BADGES[(entry as any).medium || 'LIVE_ACTION'] || { label: 'Live Action', icon: '📽' }
 
               return (
                 <Link
@@ -142,8 +147,10 @@ export default async function DashboardPage() {
                     )}
 
                     <div>
-                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-                        {typeIcon} {entry.type}
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-1.5 py-0.5 rounded">
+                        <span>{typeIcon} {entry.type}</span>
+                        <span>•</span>
+                        <span>{mediumInfo.icon} {mediumInfo.label}</span>
                       </span>
                       <h3 className="font-semibold text-foreground text-sm line-clamp-1 mt-1 group-hover:text-accent transition-colors">
                         {entry.title}
@@ -238,6 +245,7 @@ export default async function DashboardPage() {
                 entry.totalSeasons
               )
               const typeIcon = TYPE_ICONS[entry.type] || '🎬'
+              const mediumInfo = MEDIUM_BADGES[(entry as any).medium || 'LIVE_ACTION'] || { label: 'Live Action', icon: '📽' }
 
               return (
                 <Link
@@ -259,8 +267,9 @@ export default async function DashboardPage() {
 
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] font-semibold uppercase text-accent tracking-wider flex items-center gap-1">
-                      <span>{typeIcon}</span>
-                      <span>{entry.type}</span>
+                      <span>{typeIcon} {entry.type}</span>
+                      <span>•</span>
+                      <span>{mediumInfo.icon} {mediumInfo.label}</span>
                     </span>
                     <h3 className="font-semibold text-foreground text-sm truncate group-hover:text-accent transition-colors">
                       {entry.title}

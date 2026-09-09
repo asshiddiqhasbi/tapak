@@ -21,9 +21,14 @@ model User {
 }
 
 enum WatchType {
-  ANIME
   SERIES
   FILM
+}
+
+enum MediaType {
+  LIVE_ACTION
+  ANIME
+  ANIMATION
 }
 
 enum WatchStatus {
@@ -41,6 +46,7 @@ model WatchEntry {
 
   title           String
   type            WatchType
+  medium          MediaType   @default(LIVE_ACTION)
   posterUrl       String?
   totalEpisodes   Int?
   currentEpisode  Int         @default(0)
@@ -58,6 +64,7 @@ model WatchEntry {
 
   @@index([userId, status])
   @@index([userId, type])
+  @@index([userId, medium])
   @@index([userId, rating])
   @@map("watch_entries")
 }

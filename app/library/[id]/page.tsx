@@ -33,9 +33,14 @@ export default async function WatchEntryDetailPage({
   const TYPE_ICONS: Record<string, string> = {
     FILM: '🎬',
     SERIES: '📺',
-    ANIME: '🍿',
+  }
+  const MEDIUM_BADGES: Record<string, { label: string; icon: string }> = {
+    ANIME: { label: 'Anime', icon: '🍿' },
+    LIVE_ACTION: { label: 'Live Action', icon: '📽' },
+    ANIMATION: { label: 'Animasi', icon: '🎨' },
   }
   const typeIcon = TYPE_ICONS[entry.type] || '🎬'
+  const mediumInfo = MEDIUM_BADGES[(entry as any).medium || 'LIVE_ACTION'] || { label: 'Live Action', icon: '📽' }
 
   let seasonsDetail: SeasonDetailItem[] | null = null
   if (entry.type !== 'FILM') {
@@ -84,8 +89,10 @@ export default async function WatchEntryDetailPage({
           )}
 
           <div className="space-y-1.5">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-              {typeIcon} {entry.type}
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
+              <span>{typeIcon} {entry.type}</span>
+              <span>•</span>
+              <span>{mediumInfo.icon} {mediumInfo.label}</span>
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">{entry.title}</h1>
             <div className="flex items-center gap-3 text-xs text-muted">
@@ -139,7 +146,7 @@ export default async function WatchEntryDetailPage({
         <div>
           <span className="text-muted block font-medium">Tanggal Selesai</span>
           <span className="font-semibold text-foreground mt-0.5 block">
-            {entry.completedAt ? new Date(entry.completedAt).toLocaleDateString('id-ID') : '-'}
+            {entry.status === 'COMPLETED' && entry.completedAt ? new Date(entry.completedAt).toLocaleDateString('id-ID') : '-'}
           </span>
         </div>
       </div>

@@ -9,7 +9,8 @@ import { createClient } from '@/lib/supabase'
 import Toast from '@/components/ui/toast'
 import ImageCropperModal from '@/components/ui/image-cropper-modal'
 
-type WatchType = 'ANIME' | 'SERIES' | 'FILM'
+type WatchType = 'SERIES' | 'FILM'
+type MediaType = 'LIVE_ACTION' | 'ANIME' | 'ANIMATION'
 type WatchStatus = 'PLAN_TO_WATCH' | 'WATCHING' | 'COMPLETED' | 'ON_HOLD' | 'DROPPED'
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
     id: string
     title: string
     type: WatchType
+    medium?: MediaType | null
     posterUrl?: string | null
     totalEpisodes?: number | null
     currentEpisode?: number | null
@@ -45,7 +47,8 @@ export default function WatchEntryForm({ initialData }: Props) {
   const isEdit = !!initialData
 
   const [title, setTitle] = useState(initialData?.title ?? '')
-  const [type, setType] = useState<WatchType>(initialData?.type ?? 'ANIME')
+  const [type, setType] = useState<WatchType>(initialData?.type ?? 'SERIES')
+  const [medium, setMedium] = useState<MediaType>(initialData?.medium ?? 'ANIME')
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
   const [rating, setRating] = useState<string>(initialData?.rating?.toString() ?? '')
   const [notes, setNotes] = useState<string>(initialData?.notes ?? '')
@@ -234,6 +237,7 @@ export default function WatchEntryForm({ initialData }: Props) {
     const payload = {
       title,
       type,
+      medium,
       status,
       posterUrl: finalPosterUrl,
       totalEpisodes: type === 'FILM' ? undefined : finalTotalEpisodes,
@@ -360,19 +364,33 @@ export default function WatchEntryForm({ initialData }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-              Tipe Tontonan
+              Format Tontonan
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as WatchType)}
-              className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent"
             >
-              <option value="ANIME">Anime</option>
-              <option value="SERIES">Series</option>
-              <option value="FILM">Film</option>
+              <option value="SERIES">📺 Series</option>
+              <option value="FILM">🎬 Film / Movie</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Kategori / Media
+            </label>
+            <select
+              value={medium}
+              onChange={(e) => setMedium(e.target.value as MediaType)}
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent"
+            >
+              <option value="ANIME">🍿 Anime</option>
+              <option value="LIVE_ACTION">📽 Live Action</option>
+              <option value="ANIMATION">🎨 Animasi / Kartun</option>
             </select>
           </div>
 
@@ -383,7 +401,7 @@ export default function WatchEntryForm({ initialData }: Props) {
             <select
               value={status}
               onChange={(e) => handleStatusChange(e.target.value as WatchStatus)}
-              className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>

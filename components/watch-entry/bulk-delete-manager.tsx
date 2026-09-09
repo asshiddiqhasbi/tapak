@@ -29,6 +29,7 @@ export interface WatchEntryItem {
   id: string
   title: string
   type: string
+  medium?: string
   status: string
   posterUrl?: string | null
   totalEpisodes?: number | null
@@ -38,6 +39,12 @@ export interface WatchEntryItem {
   rating?: number | null
   startedAt?: Date | null
   completedAt?: Date | null
+}
+
+const MEDIUM_BADGES: Record<string, { label: string; icon: string }> = {
+  ANIME: { label: 'Anime', icon: '🍿' },
+  LIVE_ACTION: { label: 'Live Action', icon: '📽' },
+  ANIMATION: { label: 'Animasi', icon: '🎨' },
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -227,8 +234,9 @@ export default function BulkDeleteManager({
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap pr-6">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded flex items-center gap-1">
-                        <span>{typeIcon}</span>
-                        <span>{entry.type}</span>
+                        <span>{typeIcon} {entry.type}</span>
+                        <span>•</span>
+                        <span>{MEDIUM_BADGES[entry.medium || 'LIVE_ACTION']?.icon || '🍿'} {MEDIUM_BADGES[entry.medium || 'LIVE_ACTION']?.label || 'Live Action'}</span>
                       </span>
                       <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded border ${badge.className}`}>
                         {badge.label}
