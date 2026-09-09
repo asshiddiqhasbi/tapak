@@ -27,7 +27,8 @@ export default async function WatchEntryDetailPage({
     entry.currentEpisode,
     entry.totalEpisodes,
     entry.currentSeason,
-    entry.totalSeasons
+    entry.totalSeasons,
+    entry.isOngoing
   )
 
   const TYPE_ICONS: Record<string, string> = {
@@ -89,11 +90,18 @@ export default async function WatchEntryDetailPage({
           )}
 
           <div className="space-y-1.5">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
-              <span>{typeIcon} {entry.type}</span>
-              <span>•</span>
-              <span>{mediumInfo.icon} {mediumInfo.label}</span>
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2 py-0.5 rounded">
+                <span>{typeIcon} {entry.type}</span>
+                <span>•</span>
+                <span>{mediumInfo.icon} {mediumInfo.label}</span>
+              </span>
+              {entry.isOngoing && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
+                  🟢 ONGOING
+                </span>
+              )}
+            </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">{entry.title}</h1>
             <div className="flex items-center gap-3 text-xs text-muted">
               {epText && <span>{epText}</span>}
@@ -128,7 +136,7 @@ export default async function WatchEntryDetailPage({
         <div>
           <span className="text-muted block font-medium">Total Episode</span>
           <span className="font-semibold text-foreground mt-0.5 block">
-            {entry.type === 'FILM' ? '-' : (entry.totalEpisodes ?? 'Ongoing')}
+            {entry.type === 'FILM' ? '-' : (entry.isOngoing ? 'Ongoing' : (entry.totalEpisodes ?? 'Ongoing'))}
           </span>
         </div>
         <div>
@@ -157,6 +165,7 @@ export default async function WatchEntryDetailPage({
           id={entry.id}
           seasons={seasonsDetail}
           currentActiveSeasonNumber={entry.currentSeason || 1}
+          isOngoing={entry.isOngoing}
         />
       ) : (
         <ProgressControl
@@ -167,6 +176,7 @@ export default async function WatchEntryDetailPage({
           currentSeason={entry.currentSeason}
           totalSeasons={entry.totalSeasons}
           status={entry.status}
+          isOngoing={entry.isOngoing}
           rating={entry.rating}
           notes={entry.notes}
         />

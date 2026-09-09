@@ -117,7 +117,8 @@ export default async function DashboardPage() {
                 entry.currentEpisode,
                 entry.totalEpisodes,
                 entry.currentSeason,
-                entry.totalSeasons
+                entry.totalSeasons,
+                entry.isOngoing
               )
               const progressPct =
                 entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
@@ -242,7 +243,8 @@ export default async function DashboardPage() {
                 entry.currentEpisode,
                 entry.totalEpisodes,
                 entry.currentSeason,
-                entry.totalSeasons
+                entry.totalSeasons,
+                entry.isOngoing
               )
               const typeIcon = TYPE_ICONS[entry.type] || '🎬'
               const mediumInfo = MEDIUM_BADGES[(entry as any).medium || 'LIVE_ACTION'] || { label: 'Live Action', icon: '📽' }

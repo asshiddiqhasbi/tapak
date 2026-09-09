@@ -156,6 +156,7 @@ export async function createWatchEntry(formData: {
   currentSeason?: number
   seasonsDetail?: any
   status?: string
+  isOngoing?: boolean
   rating?: number | null
   notes?: string | null
 }) {
@@ -204,6 +205,7 @@ export async function createWatchEntry(formData: {
       currentSeason: formData.type === 'FILM' ? null : (initialStats?.activeSeasonNumber ?? formData.currentSeason ?? 1),
       seasonsDetail: formData.type === 'FILM' ? null : seasonsDetail,
       status: effectiveStatus as any,
+      isOngoing: formData.type === 'FILM' ? false : !!formData.isOngoing,
       rating: initialStats ? initialStats.generalRating : (formData.rating !== undefined ? formData.rating : null),
       notes: formData.notes !== undefined ? formData.notes : null,
       startedAt,
@@ -228,6 +230,7 @@ export async function updateWatchEntry(
     currentSeason?: number
     seasonsDetail?: any
     status?: string
+    isOngoing?: boolean
     rating?: number | null
     notes?: string | null
   }
@@ -266,6 +269,7 @@ export async function updateWatchEntry(
       currentSeason: formData.type === 'FILM' ? null : (stats ? stats.activeSeasonNumber : (formData.currentSeason !== undefined ? formData.currentSeason : entry.currentSeason)),
       seasonsDetail,
       status: nextStatus as any,
+      isOngoing: formData.type === 'FILM' ? false : (formData.isOngoing !== undefined ? formData.isOngoing : entry.isOngoing),
       rating: stats ? stats.generalRating : (formData.rating !== undefined ? formData.rating : entry.rating),
       notes: formData.notes !== undefined ? formData.notes : entry.notes,
       startedAt,

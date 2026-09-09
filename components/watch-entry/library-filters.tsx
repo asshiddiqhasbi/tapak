@@ -97,10 +97,11 @@ export default function LibraryFilters({
   ]
 
   return (
-    <div className="space-y-2">
-      <div className={`flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 transition-opacity duration-200 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
+    <div className="space-y-3.5">
+      {/* Top Controls Row: Search + Dropdown Filters */}
+      <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 transition-opacity duration-200 ${isPending ? 'opacity-70' : 'opacity-100'}`}>
         {/* Search Input Bar */}
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative flex-1 min-w-[200px]">
           <input
             type="text"
             value={searchTerm}
@@ -153,33 +154,12 @@ export default function LibraryFilters({
           )}
         </div>
 
-        {/* Filter Status Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
-          {statuses.map((s) => {
-            const isActive = currentStatus === s.value || (s.value === 'ALL' && !currentStatus)
-            return (
-              <button
-                key={s.value}
-                type="button"
-                onClick={() => updateFilter('status', s.value)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'bg-accent text-background font-semibold shadow-sm'
-                    : 'text-muted hover:text-foreground hover:bg-surface-hover'
-                }`}
-              >
-                {s.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Filter Medium, Format & Sort Dropdowns */}
-        <div className="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/60">
+        {/* Dropdown Filters (Medium, Format, Sort) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <select
             value={currentMedium || 'ALL'}
             onChange={(e) => updateFilter('medium', e.target.value)}
-            className="rounded-xl border border-border/80 bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+            className="rounded-xl border border-border/80 bg-surface-hover px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-accent shadow-sm"
           >
             {mediums.map((m) => (
               <option key={m.value} value={m.value}>
@@ -191,7 +171,7 @@ export default function LibraryFilters({
           <select
             value={currentType || 'ALL'}
             onChange={(e) => updateFilter('type', e.target.value)}
-            className="rounded-xl border border-border/80 bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+            className="rounded-xl border border-border/80 bg-surface-hover px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-accent shadow-sm"
           >
             {types.map((t) => (
               <option key={t.value} value={t.value}>
@@ -203,7 +183,7 @@ export default function LibraryFilters({
           <select
             value={currentSort || 'newest'}
             onChange={(e) => updateFilter('sort', e.target.value)}
-            className="rounded-xl border border-border/80 bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+            className="rounded-xl border border-border/80 bg-surface-hover px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:border-accent shadow-sm"
           >
             {sortOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -211,6 +191,32 @@ export default function LibraryFilters({
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Bottom Row: Status Filter Bar */}
+      <div className="pt-2 border-t border-border/50">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <span className="text-[10px] uppercase font-bold text-muted/70 tracking-wider mr-1 shrink-0">
+            Status:
+          </span>
+          {statuses.map((s) => {
+            const isActive = currentStatus === s.value || (s.value === 'ALL' && !currentStatus)
+            return (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => updateFilter('status', s.value)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+                  isActive
+                    ? 'bg-accent text-background font-bold shadow-md ring-1 ring-accent/40'
+                    : 'border border-border/60 bg-surface-hover/70 text-muted hover:text-foreground hover:bg-surface-hover'
+                }`}
+              >
+                {s.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 

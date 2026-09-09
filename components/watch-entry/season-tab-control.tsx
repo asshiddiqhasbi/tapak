@@ -26,10 +26,12 @@ export default function SeasonTabControl({
   id,
   seasons,
   currentActiveSeasonNumber = 1,
+  isOngoing = false,
 }: {
   id: string
   seasons: SeasonDetailItem[]
   currentActiveSeasonNumber?: number
+  isOngoing?: boolean
 }) {
   const router = useRouter()
   const [activeSeasonNumber, setActiveSeasonNumber] = useState(currentActiveSeasonNumber)
@@ -63,7 +65,9 @@ export default function SeasonTabControl({
 
     let ep = episode
     if (isNaN(ep) || ep < 0) ep = 0
-    if (ep > activeSeason.episodes) ep = activeSeason.episodes
+    if (!isOngoing && activeSeason.episodes > 0 && ep > activeSeason.episodes) {
+      ep = activeSeason.episodes
+    }
 
     const parsedRating = rating ? parseFloat(rating) : null
 
@@ -86,9 +90,10 @@ export default function SeasonTabControl({
   }
 
   function handlePlusOne() {
-    const nextEp = Math.min(episode + 1, activeSeason.episodes)
+    const maxEp = !isOngoing && activeSeason.episodes > 0 ? activeSeason.episodes : Infinity
+    const nextEp = Math.min(episode + 1, maxEp)
     setEpisode(nextEp)
-    if (nextEp === activeSeason.episodes && status !== 'COMPLETED') {
+    if (!isOngoing && nextEp === activeSeason.episodes && status !== 'COMPLETED') {
       setStatus('COMPLETED')
     }
   }

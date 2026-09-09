@@ -26,6 +26,7 @@ type Props = {
     currentSeason?: number | null
     seasonsDetail?: any
     status?: WatchStatus | null
+    isOngoing?: boolean | null
     rating?: number | null
     notes?: string | null
   }
@@ -50,6 +51,7 @@ export default function WatchEntryForm({ initialData }: Props) {
   const [type, setType] = useState<WatchType>(initialData?.type ?? 'SERIES')
   const [medium, setMedium] = useState<MediaType>(initialData?.medium ?? 'ANIME')
   const [status, setStatus] = useState<WatchStatus>(initialData?.status ?? 'PLAN_TO_WATCH')
+  const [isOngoing, setIsOngoing] = useState<boolean>(initialData?.isOngoing ?? false)
   const [rating, setRating] = useState<string>(initialData?.rating?.toString() ?? '')
   const [notes, setNotes] = useState<string>(initialData?.notes ?? '')
   const [totalSeasons, setTotalSeasons] = useState(
@@ -239,6 +241,7 @@ export default function WatchEntryForm({ initialData }: Props) {
       type,
       medium,
       status,
+      isOngoing: type === 'FILM' ? false : isOngoing,
       posterUrl: finalPosterUrl,
       totalEpisodes: type === 'FILM' ? undefined : finalTotalEpisodes,
       currentEpisode: type === 'FILM' ? 0 : parsedCurrent,
@@ -411,6 +414,22 @@ export default function WatchEntryForm({ initialData }: Props) {
             </select>
           </div>
         </div>
+
+        {/* Checkbox Toggle Ongoing / Airing */}
+        {type !== 'FILM' && (
+          <div className="flex items-center gap-2 pt-1 px-1">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-foreground select-none">
+              <input
+                type="checkbox"
+                checked={isOngoing}
+                onChange={(e) => setIsOngoing(e.target.checked)}
+                className="h-4 w-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+              />
+              <span>🟢 Masih Tayang / Airing (Series Ongoing)</span>
+            </label>
+            <span className="text-[11px] text-muted">(Rilis mingguan / belum tamat)</span>
+          </div>
+        )}
 
         {/* Dynamic Season & Episode Fields */}
         {type !== 'FILM' && (

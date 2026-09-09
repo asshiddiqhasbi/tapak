@@ -54,6 +54,7 @@ model WatchEntry {
   currentSeason   Int?        @default(1)
   seasonsDetail   Json?
   status          WatchStatus
+  isOngoing       Boolean     @default(false)
   rating          Float?
   notes           String?
   startedAt       DateTime?

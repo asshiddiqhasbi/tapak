@@ -14,6 +14,7 @@ type Props = {
   currentSeason?: number | null
   totalSeasons?: number | null
   status: string
+  isOngoing?: boolean
   rating?: number | null
   notes?: string | null
 }
@@ -34,6 +35,7 @@ export default function ProgressControl({
   currentSeason = 1,
   totalSeasons = null,
   status,
+  isOngoing = false,
   rating = null,
   notes = null,
 }: Props) {
@@ -63,7 +65,7 @@ export default function ProgressControl({
 
     let ep = episode
     if (isNaN(ep) || ep < 0) ep = 0
-    if (type !== 'FILM' && totalEpisodes && totalEpisodes > 0 && ep > totalEpisodes) {
+    if (type !== 'FILM' && !isOngoing && totalEpisodes && totalEpisodes > 0 && ep > totalEpisodes) {
       ep = totalEpisodes
     }
 
@@ -109,15 +111,15 @@ export default function ProgressControl({
   }
 
   function handlePlusOne() {
-    const maxEp = totalEpisodes && totalEpisodes > 0 ? totalEpisodes : Infinity
+    const maxEp = !isOngoing && totalEpisodes && totalEpisodes > 0 ? totalEpisodes : Infinity
     const nextEp = Math.min(episode + 1, maxEp)
     setEpisode(nextEp)
   }
 
   const isPlusOneDisabled =
-    loading || (type === 'FILM') || (totalEpisodes !== null && totalEpisodes > 0 && episode >= totalEpisodes)
+    loading || (type === 'FILM') || (!isOngoing && totalEpisodes !== null && totalEpisodes > 0 && episode >= totalEpisodes)
 
-  const episodeText = formatEpisodeText(type, episode, totalEpisodes)
+  const episodeText = formatEpisodeText(type, episode, totalEpisodes, currentSeason, totalSeasons, isOngoing)
 
   // Smart suggestion condition:
   // Non-film, currently WATCHING, totalEpisodes exists & > 0, currentEpisode >= totalEpisodes
