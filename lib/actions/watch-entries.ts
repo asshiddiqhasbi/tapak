@@ -145,6 +145,80 @@ export async function updateSeasonDetail(
   revalidatePath('/dashboard')
 }
 
+export async function addNewSeasonToWatchEntry(
+  id: string,
+  episodesCount: number = 12
+) {
+  const user = await getCurrentUser()
+
+  const entry = await prisma.watchEntry.findUnique({ where: { id } })
+  if (!entry || entry.userId !== user.id) throw new Error('Forbidden')
+
+  let seasons: SeasonDetailItem[] = Array.isArray(entry.seasonsDetail)
+    ? (entry.seasonsDetail as unknown as SeasonDetailItem[])
+    : []
+
+  if (seasons.length === 0) {
+    const totalS = entry.totalSeasons || 1
+    const totalE = entry.totalEpisodes || 12
+    const epsPerSeason = Math.max(1, Math.floor(totalE / totalS))
+    seasons = Array.from({ length: totalS }, (_, idx) => ({
+      seasonNumber: idx + 1,
+      episodes: epsPerSeason,
+      currentEpisode: idx + 1 === entry.currentSeason ? entry.currentEpisode : (entry.status === 'COMPLETED' ? epsPerSeason : 0),
+      status: idx + 1 === entry.currentSeason ? entry.status : (entry.status === 'COMPLETED' ? 'COMPLETED' : 'PLAN_TO_WATCH'),
+      rating: idx + 1 === entry.currentSeason ? entry.rating : null,
+      notes: idx + 1 === entry.currentSeason ? entry.notes : null,
+    }))
+  }
+
+  const newSeasonNumber = seasons.length + 1
+  const newSeasonItem: SeasonDetailItem = {
+    seasonNumber: newSeasonNumber,
+    episodes: episodesCount > 0 ? episodesCount : 12,
+    currentEpisode: 0,
+    status: 'PLAN_TO_WATCH',
+    rating: null,
+    notes: null,
+  }
+
+  seasons.push(newSeasonItem)
+
+  const stats = calculateGeneralStats(seasons)
+
+  let startedAt = entry.startedAt
+  if (stats.generalStatus !== 'PLAN_TO_WATCH' && !startedAt) {
+    startedAt = new Date()
+  }
+
+  let completedAt = entry.completedAt
+  if (stats.generalStatus === 'COMPLETED') {
+    if (!completedAt) completedAt = new Date()
+  } else {
+    completedAt = null
+  }
+
+  await prisma.watchEntry.update({
+    where: { id },
+    data: {
+      seasonsDetail: seasons as any,
+      rating: stats.generalRating,
+      status: stats.generalStatus as any,
+      currentEpisode: stats.totalCurrentEpisodes,
+      totalEpisodes: stats.totalEpisodes,
+      totalSeasons: seasons.length,
+      currentSeason: stats.activeSeasonNumber,
+      startedAt,
+      completedAt,
+    },
+  })
+
+  revalidatePath('/library')
+  revalidatePath(`/library/${id}`)
+  revalidatePath('/dashboard')
+  return newSeasonNumber
+}
+
 export async function createWatchEntry(formData: {
   title: string
   type: 'SERIES' | 'FILM'

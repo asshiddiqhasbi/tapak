@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateSeasonDetail } from '@/lib/actions/watch-entries'
+import { updateSeasonDetail, addNewSeasonToWatchEntry } from '@/lib/actions/watch-entries'
 import Toast from '@/components/ui/toast'
 import type { SeasonDetailItem } from '@/lib/utils'
 
@@ -47,6 +47,10 @@ export default function SeasonTabControl({
   const [notes, setNotes] = useState<string>(activeSeason.notes ?? '')
 
   const [loading, setLoading] = useState(false)
+  const [isAddingSeason, setIsAddingSeason] = useState(false)
+  const [showAddSeasonModal, setShowAddSeasonModal] = useState(false)
+  const [newSeasonEps, setNewSeasonEps] = useState('12')
+
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
@@ -89,6 +93,26 @@ export default function SeasonTabControl({
     }
   }
 
+  async function handleConfirmAddSeason() {
+    setIsAddingSeason(true)
+    setToastMessage(null)
+    const eps = parseInt(newSeasonEps) || 12
+
+    try {
+      const createdSeasonNum = await addNewSeasonToWatchEntry(id, eps)
+      setShowAddSeasonModal(false)
+      setIsAddingSeason(false)
+      setActiveSeasonNumber(createdSeasonNum)
+      setToastType('success')
+      setToastMessage(`Berhasil menambahkan Season ${createdSeasonNum}`)
+      router.refresh()
+    } catch {
+      setIsAddingSeason(false)
+      setToastType('error')
+      setToastMessage('Gagal menambahkan season baru')
+    }
+  }
+
   function handlePlusOne() {
     const maxEp = !isOngoing && activeSeason.episodes > 0 ? activeSeason.episodes : Infinity
     const nextEp = Math.min(episode + 1, maxEp)
@@ -115,15 +139,81 @@ export default function SeasonTabControl({
         onClose={() => setToastMessage(null)}
       />
 
+      {/* Modal Add Season */}
+      {showAddSeasonModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowAddSeasonModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-border/80 bg-surface p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-accent font-semibold text-xs">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-muted border border-accent/20 text-sm">
+                  📺
+                </span>
+                <span>Tambah Season</span>
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                Tambah Season {seasons.length + 1}?
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Tambahkan season baru ke tontonan ini. Masukkan jumlah total episode untuk Season {seasons.length + 1}.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                Total Episode Season {seasons.length + 1}
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={newSeasonEps}
+                onChange={(e) => setNewSeasonEps(e.target.value)}
+                disabled={isAddingSeason}
+                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                placeholder="12"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAddSeasonModal(false)}
+                disabled={isAddingSeason}
+                className="rounded-xl border border-border/80 px-4 py-2 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAddSeason}
+                disabled={isAddingSeason}
+                className="rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-background hover:bg-accent-hover transition-colors shadow-md disabled:opacity-50"
+              >
+                {isAddingSeason ? 'Menambahkan...' : `+ Tambah Season ${seasons.length + 1}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header & Tab Selector */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted flex items-center gap-2">
             <span>📺 Manajemen Season ({seasons.length} Season)</span>
           </h2>
-          <span className="text-xs text-accent font-semibold">
-            Season {activeSeasonNumber} dipilih
-          </span>
+          <button
+            type="button"
+            onClick={() => setShowAddSeasonModal(true)}
+            className="inline-flex items-center gap-1 text-xs text-accent font-semibold hover:underline"
+          >
+            <span>+ Tambah Season</span>
+          </button>
         </div>
 
         {/* Season Tabs Bar */}
@@ -162,6 +252,15 @@ export default function SeasonTabControl({
               </button>
             )
           })}
+
+          <button
+            type="button"
+            onClick={() => setShowAddSeasonModal(true)}
+            disabled={loading || isAddingSeason}
+            className="flex-shrink-0 flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-3 border border-dashed border-accent/60 bg-accent-muted/20 hover:bg-accent-muted/40 text-accent font-semibold text-xs transition-all shadow-sm"
+          >
+            <span>+ Season Baru</span>
+          </button>
         </div>
       </div>
 
