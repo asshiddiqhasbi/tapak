@@ -585,77 +585,88 @@ export default function WatchEntryForm({ initialData }: Props) {
 
         {/* Rating and Notes fields when status is COMPLETED or in progress */}
         {status !== 'PLAN_TO_WATCH' && (
-          <div className="space-y-4 pt-1">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
-                <span>Rating Personal (Format Desimal, e.g. 8.5)</span>
-                {status === 'COMPLETED' && (
-                  <span className="text-[10px] text-accent font-normal border border-accent/30 bg-accent-muted px-2 py-0.5 rounded-full">
-                    ✨ Direkomendasikan untuk tontonan Selesai
-                  </span>
-                )}
-              </label>
-              <div className="space-y-2">
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    max="10"
-                    value={rating}
-                    onChange={(e) => setRating(e.target.value)}
-                    placeholder="Contoh: 8.5 (1.0 - 10.0)"
-                    className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
-                  />
-                  {rating && (
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-amber-400">
-                      ★ {rating} / 10
+          type !== 'FILM' && showSeasonBreakdown && seasonsList.length > 1 ? (
+            <div className="rounded-xl border border-accent/30 bg-accent-muted/10 p-4 space-y-1.5">
+              <div className="flex items-center gap-2 text-accent font-semibold text-xs">
+                <span>💡 Rating & Catatan Multi-Season</span>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Untuk tontonan Series dengan lebih dari 1 season, rating & catatan pribadi diisi secara terpisah per-season di <strong>Halaman Detail Tontonan</strong>. Rating keseluruhan tontonan akan dihitung otomatis dari rata-rata rating season.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-1">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5 flex items-center justify-between">
+                  <span>Rating Personal (Format Desimal, e.g. 8.5)</span>
+                  {status === 'COMPLETED' && (
+                    <span className="text-[10px] text-accent font-normal border border-accent/30 bg-accent-muted px-2 py-0.5 rounded-full">
+                      ✨ Direkomendasikan untuk tontonan Selesai
                     </span>
                   )}
-                </div>
-                {/* Preset quick buttons */}
-                <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-                  <span className="text-muted text-[10px]">Preset:</span>
-                  {['7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setRating(preset)}
-                      className={`px-2 py-0.5 rounded-md border transition-colors ${
-                        rating === preset
-                          ? 'border-amber-500/80 bg-amber-950/60 text-amber-300 font-semibold'
-                          : 'border-border/60 bg-surface-hover text-muted hover:text-foreground'
-                      }`}
-                    >
-                      ★ {preset}
-                    </button>
-                  ))}
-                  {rating && (
-                    <button
-                      type="button"
-                      onClick={() => setRating('')}
-                      className="px-2 py-0.5 rounded-md text-muted hover:text-rose-400 transition-colors"
-                    >
-                      Hapus
-                    </button>
-                  )}
+                </label>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      max="10"
+                      value={rating}
+                      onChange={(e) => setRating(e.target.value)}
+                      placeholder="Contoh: 8.5 (1.0 - 10.0)"
+                      className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+                    />
+                    {rating && (
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-amber-400">
+                        ★ {rating} / 10
+                      </span>
+                    )}
+                  </div>
+                  {/* Preset quick buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                    <span className="text-muted text-[10px]">Preset:</span>
+                    {['7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setRating(preset)}
+                        className={`px-2 py-0.5 rounded-md border transition-colors ${
+                          rating === preset
+                            ? 'border-amber-500/80 bg-amber-950/60 text-amber-300 font-semibold'
+                            : 'border-border/60 bg-surface-hover text-muted hover:text-foreground'
+                        }`}
+                      >
+                        ★ {preset}
+                      </button>
+                    ))}
+                    {rating && (
+                      <button
+                        type="button"
+                        onClick={() => setRating('')}
+                        className="px-2 py-0.5 rounded-md text-muted hover:text-rose-400 transition-colors"
+                      >
+                        Hapus
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                Catatan Pribadi (opsional)
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tulis kesan, review singkat, atau pesan pribadi..."
-                rows={3}
-                className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
-              />
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                  Catatan Pribadi (opsional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Tulis kesan, review singkat, atau pesan pribadi..."
+                  rows={3}
+                  className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+                />
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {/* Poster File Upload Only (Width constrained to button bounds) */}
