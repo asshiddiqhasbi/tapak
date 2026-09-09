@@ -41,6 +41,9 @@ export default function SeasonTabControl({
 
   const [status, setStatus] = useState<string>(activeSeason.status)
   const [episode, setEpisode] = useState<number>(activeSeason.currentEpisode)
+  const [seasonEpsInput, setSeasonEpsInput] = useState<string>(
+    activeSeason.episodes ? activeSeason.episodes.toString() : ''
+  )
   const [rating, setRating] = useState<string>(
     activeSeason.rating ? activeSeason.rating.toString() : ''
   )
@@ -49,7 +52,7 @@ export default function SeasonTabControl({
   const [loading, setLoading] = useState(false)
   const [isAddingSeason, setIsAddingSeason] = useState(false)
   const [showAddSeasonModal, setShowAddSeasonModal] = useState(false)
-  const [newSeasonEps, setNewSeasonEps] = useState('12')
+  const [newSeasonEps, setNewSeasonEps] = useState('')
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
@@ -58,6 +61,7 @@ export default function SeasonTabControl({
     if (activeSeason) {
       setStatus(activeSeason.status)
       setEpisode(activeSeason.currentEpisode)
+      setSeasonEpsInput(activeSeason.episodes ? activeSeason.episodes.toString() : '')
       setRating(activeSeason.rating ? activeSeason.rating.toString() : '')
       setNotes(activeSeason.notes ?? '')
     }
@@ -69,8 +73,17 @@ export default function SeasonTabControl({
 
     let ep = episode
     if (isNaN(ep) || ep < 0) ep = 0
-    if (!isOngoing && activeSeason.episodes > 0 && ep > activeSeason.episodes) {
-      ep = activeSeason.episodes
+    let parsedEps = seasonEpsInput ? parseInt(seasonEpsInput) : 0
+    if (isNaN(parsedEps) || parsedEps < 0) parsedEps = 0
+
+    // Auto-set total episodes equal to currentEpisode if status is COMPLETED and totalEps was 0
+    if (status === 'COMPLETED' && parsedEps === 0 && ep > 0) {
+      parsedEps = ep
+      setSeasonEpsInput(ep.toString())
+    }
+
+    if (!isOngoing && parsedEps > 0 && ep > parsedEps) {
+      ep = parsedEps
     }
 
     const parsedRating = rating ? parseFloat(rating) : null
@@ -79,6 +92,7 @@ export default function SeasonTabControl({
       await updateSeasonDetail(id, activeSeasonNumber, {
         status,
         currentEpisode: ep,
+        episodes: parsedEps,
         rating: parsedRating && !isNaN(parsedRating) ? Math.min(Math.max(parsedRating, 0), 10) : null,
         notes: notes || null,
       })
@@ -96,7 +110,7 @@ export default function SeasonTabControl({
   async function handleConfirmAddSeason() {
     setIsAddingSeason(true)
     setToastMessage(null)
-    const eps = parseInt(newSeasonEps) || 12
+    const eps = newSeasonEps ? parseInt(newSeasonEps) : 0
 
     try {
       const createdSeasonNum = await addNewSeasonToWatchEntry(id, eps)
@@ -114,18 +128,24 @@ export default function SeasonTabControl({
   }
 
   function handlePlusOne() {
-    const maxEp = !isOngoing && activeSeason.episodes > 0 ? activeSeason.episodes : Infinity
+    const parsedEps = seasonEpsInput ? parseInt(seasonEpsInput) : 0
+    const maxEp = !isOngoing && parsedEps > 0 ? parsedEps : Infinity
     const nextEp = Math.min(episode + 1, maxEp)
     setEpisode(nextEp)
-    if (!isOngoing && nextEp === activeSeason.episodes && status !== 'COMPLETED') {
+    if (!isOngoing && parsedEps > 0 && nextEp === parsedEps && status !== 'COMPLETED') {
       setStatus('COMPLETED')
     }
   }
 
   function handleStatusChange(newStatus: string) {
     setStatus(newStatus)
+    const parsedEps = seasonEpsInput ? parseInt(seasonEpsInput) : 0
     if (newStatus === 'COMPLETED') {
-      setEpisode(activeSeason.episodes)
+      if (parsedEps > 0) {
+        setEpisode(parsedEps)
+      } else if (episode > 0) {
+        setSeasonEpsInput(episode.toString())
+      }
     } else if (newStatus === 'PLAN_TO_WATCH') {
       setEpisode(0)
     }
@@ -282,7 +302,7 @@ export default function SeasonTabControl({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Status Season */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
@@ -292,7 +312,7 @@ export default function SeasonTabControl({
               value={status}
               onChange={(e) => handleStatusChange(e.target.value)}
               disabled={loading}
-              className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-accent"
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -302,10 +322,26 @@ export default function SeasonTabControl({
             </select>
           </div>
 
+          {/* Total Episode Season */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+              Total Eps Season {activeSeason.seasonNumber}
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={seasonEpsInput}
+              onChange={(e) => setSeasonEpsInput(e.target.value)}
+              disabled={loading}
+              placeholder="Kosong = belum tahu"
+              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+            />
+          </div>
+
           {/* Episode Progress in Season */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-              Progress Episode ({activeSeason.episodes > 0 ? `Eps ${episode}/${activeSeason.episodes}` : `Eps ${episode}`})
+              Progress Ditonton
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -313,20 +349,20 @@ export default function SeasonTabControl({
                 value={episode}
                 onChange={(e) => setEpisode(parseInt(e.target.value) || 0)}
                 disabled={loading}
-                className="w-24 rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
+                className="w-20 rounded-lg border border-border bg-surface-hover px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent"
                 min={0}
-                max={activeSeason.episodes > 0 ? activeSeason.episodes : undefined}
+                max={seasonEpsInput && parseInt(seasonEpsInput) > 0 ? parseInt(seasonEpsInput) : undefined}
               />
-              <span className="text-xs text-muted font-medium">
-                {activeSeason.episodes > 0 ? `/ ${activeSeason.episodes} eps` : 'eps'}
+              <span className="text-xs text-muted font-medium flex-shrink-0">
+                {seasonEpsInput && parseInt(seasonEpsInput) > 0 ? `/ ${seasonEpsInput} eps` : 'eps'}
               </span>
               <button
                 type="button"
                 onClick={handlePlusOne}
-                disabled={loading || episode >= activeSeason.episodes}
-                className="rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm"
+                disabled={loading || (!isOngoing && seasonEpsInput && parseInt(seasonEpsInput) > 0 ? episode >= parseInt(seasonEpsInput) : false)}
+                className="rounded-lg bg-accent px-2.5 py-2 text-xs font-semibold text-background hover:bg-accent-hover disabled:opacity-50 transition-colors shadow-sm flex-shrink-0"
               >
-                +1 Ep
+                +1 Eps
               </button>
             </div>
           </div>

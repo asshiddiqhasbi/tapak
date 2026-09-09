@@ -62,6 +62,7 @@ export async function updateSeasonDetail(
   data: {
     status?: string
     currentEpisode?: number
+    episodes?: number
     rating?: number | null
     notes?: string | null
   }
