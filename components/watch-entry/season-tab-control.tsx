@@ -305,7 +305,7 @@ export default function SeasonTabControl({
           {/* Episode Progress in Season */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-              Progress Episode (Ep {episode}/{activeSeason.episodes})
+              Progress Episode ({activeSeason.episodes > 0 ? `Eps ${episode}/${activeSeason.episodes}` : `Eps ${episode}`})
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -315,10 +315,10 @@ export default function SeasonTabControl({
                 disabled={loading}
                 className="w-24 rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
                 min={0}
-                max={activeSeason.episodes}
+                max={activeSeason.episodes > 0 ? activeSeason.episodes : undefined}
               />
               <span className="text-xs text-muted font-medium">
-                / {activeSeason.episodes} eps
+                {activeSeason.episodes > 0 ? `/ ${activeSeason.episodes} eps` : 'eps'}
               </span>
               <button
                 type="button"

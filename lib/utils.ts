@@ -8,25 +8,23 @@ export function formatEpisodeText(
 ): string | null {
   if (type === 'FILM') return null
 
-  const isOngoingOrNoTotal = isOngoing || !totalEpisodes || totalEpisodes <= 0
-  const epPart = isOngoingOrNoTotal
-    ? `Ep ${currentEpisode}`
-    : `Ep ${currentEpisode}/${totalEpisodes}`
+  const hasTotal = totalEpisodes !== undefined && totalEpisodes !== null && totalEpisodes > 0
+  const epPart = hasTotal
+    ? `Eps ${currentEpisode}/${totalEpisodes}`
+    : `Eps ${currentEpisode}`
+
+  const ongoingSuffix = isOngoing ? ' (Ongoing)' : ''
 
   if (totalSeasons && totalSeasons > 1) {
     const sNum = currentSeason || 1
-    return `S${sNum}/${totalSeasons} • ${epPart}${isOngoing ? ' (Ongoing)' : ''}`
+    return `S${sNum}/${totalSeasons} • ${epPart}${ongoingSuffix}`
   }
 
   if (currentSeason && currentSeason > 1) {
-    return `Season ${currentSeason} • ${epPart}${isOngoing ? ' (Ongoing)' : ''}`
+    return `Season ${currentSeason} • ${epPart}${ongoingSuffix}`
   }
 
-  if (isOngoingOrNoTotal) {
-    return `${epPart} (Ongoing)`
-  }
-
-  return epPart
+  return `${epPart}${ongoingSuffix}`
 }
 
 export interface SeasonDetailItem {

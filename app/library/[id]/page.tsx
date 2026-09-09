@@ -49,8 +49,8 @@ export default async function WatchEntryDetailPage({
       seasonsDetail = entry.seasonsDetail as unknown as SeasonDetailItem[]
     } else {
       const totalS = entry.totalSeasons || 1
-      const totalE = entry.totalEpisodes || 12
-      const epsPerSeason = Math.max(1, Math.floor(totalE / totalS))
+      const totalE = entry.totalEpisodes || 0
+      const epsPerSeason = totalE > 0 ? Math.max(0, Math.floor(totalE / totalS)) : 0
       seasonsDetail = Array.from({ length: totalS }, (_, idx) => ({
         seasonNumber: idx + 1,
         episodes: epsPerSeason,
