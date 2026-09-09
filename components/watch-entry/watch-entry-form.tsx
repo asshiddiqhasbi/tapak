@@ -69,15 +69,19 @@ export default function WatchEntryForm({ initialData }: Props) {
 
   // Dynamic Season Breakdown state
   const initialSeasonsDetail = Array.isArray(initialData?.seasonsDetail)
-    ? (initialData.seasonsDetail as { seasonNumber: number; episodes: number }[])
+    ? (initialData.seasonsDetail as { seasonNumber: number; episodes: number; status?: WatchStatus }[]).map((s) => ({
+        seasonNumber: s.seasonNumber,
+        episodes: s.episodes,
+        status: (s.status as WatchStatus) || (initialData?.status ?? 'PLAN_TO_WATCH'),
+      }))
     : []
   const [showSeasonBreakdown, setShowSeasonBreakdown] = useState(initialSeasonsDetail.length > 0)
-  const [seasonsList, setSeasonsList] = useState<{ seasonNumber: number; episodes: number }[]>(
+  const [seasonsList, setSeasonsList] = useState<{ seasonNumber: number; episodes: number; status: WatchStatus }[]>(
     initialSeasonsDetail.length > 0
       ? initialSeasonsDetail
       : [
-          { seasonNumber: 1, episodes: 12 },
-          { seasonNumber: 2, episodes: 12 },
+          { seasonNumber: 1, episodes: 12, status: (initialData?.status ?? 'COMPLETED') as WatchStatus },
+          { seasonNumber: 2, episodes: 12, status: 'PLAN_TO_WATCH' as WatchStatus },
         ]
   )
 
@@ -93,7 +97,7 @@ export default function WatchEntryForm({ initialData }: Props) {
   function handleAddSeasonRow() {
     setSeasonsList((prev) => [
       ...prev,
-      { seasonNumber: prev.length + 1, episodes: 12 },
+      { seasonNumber: prev.length + 1, episodes: 12, status: 'PLAN_TO_WATCH' },
     ])
   }
 
@@ -113,17 +117,27 @@ export default function WatchEntryForm({ initialData }: Props) {
     })
   }
 
+  function handleSeasonStatusChange(index: number, newStatus: WatchStatus) {
+    setSeasonsList((prev) => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], status: newStatus }
+      return updated
+    })
+  }
+
   function handleStatusChange(newStatus: WatchStatus) {
     setStatus(newStatus)
     setError(null)
 
     if (newStatus === 'PLAN_TO_WATCH') {
       setCurrentEpisode('0')
+      setSeasonsList((prev) => prev.map((s) => ({ ...s, status: 'PLAN_TO_WATCH' })))
     } else if (newStatus === 'COMPLETED') {
       const parsedTotal = parseInt(totalEpisodes)
       if (!isNaN(parsedTotal) && parsedTotal > 0) {
         setCurrentEpisode(parsedTotal.toString())
       }
+      setSeasonsList((prev) => prev.map((s) => ({ ...s, status: 'COMPLETED' })))
     }
   }
 
@@ -493,8 +507,8 @@ export default function WatchEntryForm({ initialData }: Props) {
                       setShowSeasonBreakdown(true)
                       if (seasonsList.length === 0) {
                         setSeasonsList([
-                          { seasonNumber: 1, episodes: 12 },
-                          { seasonNumber: 2, episodes: 12 },
+                          { seasonNumber: 1, episodes: 12, status: (status ?? 'COMPLETED') as WatchStatus },
+                          { seasonNumber: 2, episodes: 12, status: 'PLAN_TO_WATCH' as WatchStatus },
                         ])
                       }
                     }}
@@ -526,19 +540,32 @@ export default function WatchEntryForm({ initialData }: Props) {
 
                 <div className="space-y-2.5">
                   {seasonsList.map((sItem, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-foreground w-20 flex-shrink-0">
+                    <div key={index} className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+                      <span className="text-xs font-semibold text-foreground w-16 flex-shrink-0">
                         Season {sItem.seasonNumber}
                       </span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={sItem.episodes || ''}
-                        onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
-                        placeholder="Jumlah episode"
-                        className="flex-1 rounded-lg border border-border bg-surface-hover px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
-                      />
-                      <span className="text-xs text-muted">eps</span>
+                      <div className="flex items-center gap-1.5 flex-1 min-w-[100px]">
+                        <input
+                          type="number"
+                          min={1}
+                          value={sItem.episodes || ''}
+                          onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
+                          placeholder="Jumlah ep"
+                          className="w-full rounded-lg border border-border bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+                        />
+                        <span className="text-xs text-muted flex-shrink-0">eps</span>
+                      </div>
+                      <select
+                        value={sItem.status || 'PLAN_TO_WATCH'}
+                        onChange={(e) => handleSeasonStatusChange(index, e.target.value as WatchStatus)}
+                        className="rounded-lg border border-border bg-surface-hover px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+                      >
+                        <option value="COMPLETED">Completed</option>
+                        <option value="WATCHING">Watching</option>
+                        <option value="PLAN_TO_WATCH">Plan to Watch</option>
+                        <option value="ON_HOLD">On Hold</option>
+                        <option value="DROPPED">Dropped</option>
+                      </select>
                       {seasonsList.length > 1 && (
                         <button
                           type="button"

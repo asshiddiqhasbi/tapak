@@ -241,14 +241,17 @@ export async function createWatchEntry(formData: {
 
   let seasonsDetail = formData.seasonsDetail
   if (formData.type !== 'FILM' && Array.isArray(seasonsDetail) && seasonsDetail.length > 0) {
-    seasonsDetail = seasonsDetail.map((s: any) => ({
-      seasonNumber: s.seasonNumber,
-      episodes: s.episodes,
-      currentEpisode: status === 'COMPLETED' ? s.episodes : 0,
-      status: status,
-      rating: formData.rating || null,
-      notes: null,
-    }))
+    seasonsDetail = seasonsDetail.map((s: any) => {
+      const seasonStatus = s.status || status
+      return {
+        seasonNumber: s.seasonNumber,
+        episodes: s.episodes || 12,
+        currentEpisode: seasonStatus === 'COMPLETED' ? (s.episodes || 12) : 0,
+        status: seasonStatus,
+        rating: seasonsDetail.length === 1 ? (formData.rating || null) : null,
+        notes: seasonsDetail.length === 1 ? (formData.notes || null) : null,
+      }
+    })
   } else {
     seasonsDetail = null
   }
@@ -314,7 +317,33 @@ export async function updateWatchEntry(
   const entry = await prisma.watchEntry.findUnique({ where: { id } })
   if (!entry || entry.userId !== user.id) throw new Error('Forbidden')
 
-  const seasonsDetail = formData.type === 'FILM' ? null : (formData.seasonsDetail !== undefined ? formData.seasonsDetail : (entry.seasonsDetail as any))
+  let rawSeasonsDetail = formData.type === 'FILM' ? null : (formData.seasonsDetail !== undefined ? formData.seasonsDetail : (entry.seasonsDetail as any))
+  let seasonsDetail = rawSeasonsDetail
+
+  if (formData.type !== 'FILM' && Array.isArray(rawSeasonsDetail) && rawSeasonsDetail.length > 0) {
+    const existingMap = new Map(
+      Array.isArray(entry.seasonsDetail)
+        ? (entry.seasonsDetail as any[]).map((s) => [s.seasonNumber, s])
+        : []
+    )
+    seasonsDetail = rawSeasonsDetail.map((s: any) => {
+      const existing = existingMap.get(s.seasonNumber)
+      const seasonStatus = s.status || existing?.status || 'PLAN_TO_WATCH'
+      let currentEp = existing?.currentEpisode
+      if (currentEp === undefined || seasonStatus === 'COMPLETED') {
+        currentEp = seasonStatus === 'COMPLETED' ? (s.episodes || 12) : 0
+      }
+      return {
+        seasonNumber: s.seasonNumber,
+        episodes: s.episodes || 12,
+        currentEpisode: currentEp,
+        status: seasonStatus,
+        rating: existing?.rating ?? null,
+        notes: existing?.notes ?? null,
+      }
+    })
+  }
+
   const stats = seasonsDetail && Array.isArray(seasonsDetail) && seasonsDetail.length > 0 ? calculateGeneralStats(seasonsDetail) : null
 
   const nextStatus = stats ? stats.generalStatus : (formData.status ?? entry.status)
