@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import Logo from '@/components/ui/logo'
@@ -8,11 +9,19 @@ import Toast from '@/components/ui/toast'
 
 export default function ForgotPasswordPage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const errParam = searchParams.get('error')
+    if (errParam) {
+      setError(errParam)
+    }
+  }, [searchParams])
 
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault()
