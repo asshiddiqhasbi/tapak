@@ -72,7 +72,7 @@ export default async function LibraryPage({
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-4 shadow-xl shadow-black/30">
+      <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-md">
         <LibraryFilters
           currentStatus={status ?? 'ALL'}
           currentType={type ?? 'ALL'}

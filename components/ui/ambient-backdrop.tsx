@@ -30,10 +30,10 @@ export default async function AmbientBackdrop() {
   const isFewPosters = posters.length < 4
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none" aria-hidden="true">
-      {/* Ambient Poster Backdrop - No Repetition */}
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none transform-gpu" aria-hidden="true">
+      {/* Ambient Poster Backdrop - Lightweight GPU Layer */}
       <div
-        className={`absolute inset-0 opacity-40 blur-lg scale-105 transform-gpu ${
+        className={`absolute inset-0 opacity-20 filter blur-md transform-gpu ${
           isFewPosters
             ? 'flex justify-around items-center p-12 gap-8'
             : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6'
@@ -42,22 +42,22 @@ export default async function AmbientBackdrop() {
         {posters.map((url, idx) => (
           <div
             key={`${idx}-${url.slice(-10)}`}
-            className={`overflow-hidden rounded-2xl bg-surface/40 border border-white/5 shadow-2xl ${
+            className={`overflow-hidden rounded-2xl bg-surface/20 ${
               isFewPosters ? 'h-[360px] w-[240px] max-w-[40vw]' : 'aspect-[2/3] w-full'
             }`}
           >
             <img
               src={url}
               alt=""
-              className="h-full w-full object-cover saturate-[1.1]"
+              className="h-full w-full object-cover"
               loading="lazy"
             />
           </div>
         ))}
       </div>
 
-      {/* Dark Vignette Overlay for Crisp Readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/65 to-background/90" />
+      {/* Dark Overlay for Clean Readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background" />
     </div>
   )
 }

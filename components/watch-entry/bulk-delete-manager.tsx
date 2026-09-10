@@ -185,12 +185,12 @@ export default function BulkDeleteManager({
               onClick={() => {
                 if (isSelectMode) toggleSelectEntry(entry.id)
               }}
-              className={`group relative flex flex-col justify-between rounded-2xl border bg-surface/95 backdrop-blur-md p-4 transition-all duration-300 ease-out shadow-xl shadow-black/30 ${
+              className={`group relative flex flex-col justify-between rounded-2xl border bg-surface p-4 transition-[transform,border-color,background-color] duration-200 ease-out shadow-md ${
                 isSelectMode ? 'cursor-pointer select-none' : ''
               } ${
                 isSelected
                   ? 'border-accent bg-accent/5 ring-2 ring-accent/30'
-                  : 'border-border/80 hover:border-accent/60 hover:bg-surface hover:-translate-y-1'
+                  : 'border-border/80 hover:border-accent/60 hover:bg-surface-hover hover:-translate-y-1'
               }`}
             >
               {/* Checkbox indicator when in Select Mode */}
@@ -339,7 +339,7 @@ export default function BulkDeleteManager({
       {/* Floating Action Bar when items selected */}
       {isSelectMode && selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-lg animate-in slide-in-from-bottom-6 duration-300">
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-surface/95 backdrop-blur-xl p-3 sm:px-4 shadow-2xl shadow-black/60 text-xs">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-surface/98 p-3 sm:px-4 shadow-xl text-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"

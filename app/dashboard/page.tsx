@@ -131,7 +131,7 @@ export default async function DashboardPage() {
                 <Link
                   key={entry.id}
                   href={`/library/${entry.id}`}
-                  className="group flex flex-col justify-between rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-3 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
+                  className="group flex flex-col justify-between rounded-xl border border-border/80 bg-surface p-3 hover:border-accent/60 hover:bg-surface-hover hover:-translate-y-1 transition-[transform,border-color,background-color] duration-200 ease-out shadow-md"
                 >
                   <div className="space-y-2.5">
                     {/* Portrait Poster (Opsi B: Hanya tampilkan jika ada posterUrl) */}
@@ -253,7 +253,7 @@ export default async function DashboardPage() {
                 <Link
                   key={entry.id}
                   href={`/library/${entry.id}`}
-                  className="group flex items-center gap-4 rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-3.5 hover:border-accent/60 hover:bg-surface hover:-translate-y-1 transition-all duration-300 ease-out shadow-xl shadow-black/30"
+                  className="group flex items-center gap-4 rounded-xl border border-border/80 bg-surface p-3.5 hover:border-accent/60 hover:bg-surface-hover hover:-translate-y-1 transition-[transform,border-color,background-color] duration-200 ease-out shadow-md"
                 >
                   {entry.posterUrl && (
                     <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-md bg-surface-hover shadow-sm">
