@@ -552,51 +552,73 @@ export default function WatchEntryForm({ initialData }: Props) {
                   </button>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {seasonsList.map((sItem, index) => (
-                    <div key={index} className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
-                      <span className="text-xs font-semibold text-foreground w-16 flex-shrink-0">
-                        Season {sItem.seasonNumber}
-                      </span>
-                      <input
-                        type="text"
-                        value={sItem.title || ''}
-                        onChange={(e) => handleSeasonTitleChange(index, e.target.value)}
-                        placeholder="Judul/Sub-judul (opsional)..."
-                        className="flex-1 min-w-[130px] rounded-lg border border-border bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
-                      />
-                      <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
-                        <input
-                          type="number"
-                          min={1}
-                          value={sItem.episodes || ''}
-                          onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
-                          placeholder="Jml ep"
-                          className="w-full rounded-lg border border-border bg-surface-hover px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
-                        />
-                        <span className="text-xs text-muted flex-shrink-0">eps</span>
+                    <div key={index} className="p-3.5 rounded-xl border border-border/80 bg-surface/60 space-y-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-accent">
+                          Season {sItem.seasonNumber}
+                        </span>
+                        {seasonsList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSeasonRow(index)}
+                            className="flex items-center gap-1 text-[11px] font-medium text-muted hover:text-rose-400 transition-colors"
+                            title="Hapus Season Ini"
+                          >
+                            <span>✕ Hapus Season</span>
+                          </button>
+                        )}
                       </div>
-                      <select
-                        value={sItem.status || 'PLAN_TO_WATCH'}
-                        onChange={(e) => handleSeasonStatusChange(index, e.target.value as WatchStatus)}
-                        className="rounded-lg border border-border bg-surface-hover px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
-                      >
-                        <option value="COMPLETED">Completed</option>
-                        <option value="WATCHING">Watching</option>
-                        <option value="PLAN_TO_WATCH">Plan to Watch</option>
-                        <option value="ON_HOLD">On Hold</option>
-                        <option value="DROPPED">Dropped</option>
-                      </select>
-                      {seasonsList.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSeasonRow(index)}
-                          className="p-1 text-muted hover:text-rose-400 transition-colors"
-                          title="Hapus Season Ini"
-                        >
-                          ✕
-                        </button>
-                      )}
+
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted mb-1">
+                          Judul / Sub-judul Season (opsional)
+                        </label>
+                        <input
+                          type="text"
+                          value={sItem.title || ''}
+                          onChange={(e) => handleSeasonTitleChange(index, e.target.value)}
+                          placeholder="Contoh: Shippuden, Mugen Train Arc, dll."
+                          className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-muted mb-1">
+                            Total Episode
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={1}
+                              value={sItem.episodes || ''}
+                              onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
+                              placeholder="12"
+                              className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent"
+                            />
+                            <span className="text-xs text-muted flex-shrink-0 font-medium">eps</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-medium text-muted mb-1">
+                            Status Season
+                          </label>
+                          <select
+                            value={sItem.status || 'PLAN_TO_WATCH'}
+                            onChange={(e) => handleSeasonStatusChange(index, e.target.value as WatchStatus)}
+                            className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent"
+                          >
+                            <option value="COMPLETED">Completed</option>
+                            <option value="WATCHING">Watching</option>
+                            <option value="PLAN_TO_WATCH">Plan to Watch</option>
+                            <option value="ON_HOLD">On Hold</option>
+                            <option value="DROPPED">Dropped</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
