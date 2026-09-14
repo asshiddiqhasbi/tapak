@@ -69,19 +69,20 @@ export default function WatchEntryForm({ initialData }: Props) {
 
   // Dynamic Season Breakdown state
   const initialSeasonsDetail = Array.isArray(initialData?.seasonsDetail)
-    ? (initialData.seasonsDetail as { seasonNumber: number; episodes: number; status?: WatchStatus }[]).map((s) => ({
+    ? (initialData.seasonsDetail as { seasonNumber: number; title?: string | null; episodes: number; status?: WatchStatus }[]).map((s) => ({
         seasonNumber: s.seasonNumber,
+        title: s.title || '',
         episodes: s.episodes,
         status: (s.status as WatchStatus) || (initialData?.status ?? 'PLAN_TO_WATCH'),
       }))
     : []
   const [showSeasonBreakdown, setShowSeasonBreakdown] = useState(initialSeasonsDetail.length > 0)
-  const [seasonsList, setSeasonsList] = useState<{ seasonNumber: number; episodes: number; status: WatchStatus }[]>(
+  const [seasonsList, setSeasonsList] = useState<{ seasonNumber: number; title?: string; episodes: number; status: WatchStatus }[]>(
     initialSeasonsDetail.length > 0
       ? initialSeasonsDetail
       : [
-          { seasonNumber: 1, episodes: 12, status: (initialData?.status ?? 'COMPLETED') as WatchStatus },
-          { seasonNumber: 2, episodes: 12, status: 'PLAN_TO_WATCH' as WatchStatus },
+          { seasonNumber: 1, title: '', episodes: 12, status: (initialData?.status ?? 'COMPLETED') as WatchStatus },
+          { seasonNumber: 2, title: '', episodes: 12, status: 'PLAN_TO_WATCH' as WatchStatus },
         ]
   )
 
@@ -97,7 +98,7 @@ export default function WatchEntryForm({ initialData }: Props) {
   function handleAddSeasonRow() {
     setSeasonsList((prev) => [
       ...prev,
-      { seasonNumber: prev.length + 1, episodes: 12, status: 'PLAN_TO_WATCH' },
+      { seasonNumber: prev.length + 1, title: '', episodes: 12, status: 'PLAN_TO_WATCH' },
     ])
   }
 
@@ -105,6 +106,14 @@ export default function WatchEntryForm({ initialData }: Props) {
     setSeasonsList((prev) => {
       const updated = prev.filter((_, i) => i !== index)
       return updated.map((item, idx) => ({ ...item, seasonNumber: idx + 1 }))
+    })
+  }
+
+  function handleSeasonTitleChange(index: number, val: string) {
+    setSeasonsList((prev) => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], title: val }
+      return updated
     })
   }
 
@@ -241,7 +250,12 @@ export default function WatchEntryForm({ initialData }: Props) {
     let finalTotalEpisodes = totalEpisodes ? parseInt(totalEpisodes) : undefined
 
     if (type !== 'FILM' && showSeasonBreakdown && seasonsList.length > 0) {
-      finalSeasonsDetail = seasonsList
+      finalSeasonsDetail = seasonsList.map((s) => ({
+        seasonNumber: s.seasonNumber,
+        title: s.title ? s.title.trim() : null,
+        episodes: s.episodes || 0,
+        status: s.status,
+      }))
       finalTotalSeasons = seasonsList.length
       finalTotalEpisodes = seasonsList.reduce((acc, s) => acc + (s.episodes || 0), 0)
     }
@@ -544,14 +558,21 @@ export default function WatchEntryForm({ initialData }: Props) {
                       <span className="text-xs font-semibold text-foreground w-16 flex-shrink-0">
                         Season {sItem.seasonNumber}
                       </span>
-                      <div className="flex items-center gap-1.5 flex-1 min-w-[100px]">
+                      <input
+                        type="text"
+                        value={sItem.title || ''}
+                        onChange={(e) => handleSeasonTitleChange(index, e.target.value)}
+                        placeholder="Judul/Sub-judul (opsional)..."
+                        className="flex-1 min-w-[130px] rounded-lg border border-border bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+                      />
+                      <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                         <input
                           type="number"
                           min={1}
                           value={sItem.episodes || ''}
                           onChange={(e) => handleSeasonEpisodesChange(index, e.target.value)}
-                          placeholder="Jumlah ep"
-                          className="w-full rounded-lg border border-border bg-surface-hover px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
+                          placeholder="Jml ep"
+                          className="w-full rounded-lg border border-border bg-surface-hover px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
                         />
                         <span className="text-xs text-muted flex-shrink-0">eps</span>
                       </div>

@@ -60,6 +60,7 @@ export async function updateSeasonDetail(
   id: string,
   seasonNumber: number,
   data: {
+    title?: string | null
     status?: string
     currentEpisode?: number
     episodes?: number
@@ -82,6 +83,7 @@ export async function updateSeasonDetail(
     const epsPerSeason = totalE > 0 ? Math.max(0, Math.floor(totalE / totalS)) : 0
     seasons = Array.from({ length: totalS }, (_, idx) => ({
       seasonNumber: idx + 1,
+      title: null,
       episodes: epsPerSeason,
       currentEpisode: idx + 1 === entry.currentSeason ? entry.currentEpisode : (entry.status === 'COMPLETED' ? epsPerSeason : 0),
       status: idx + 1 === entry.currentSeason ? entry.status : (entry.status === 'COMPLETED' ? 'COMPLETED' : 'PLAN_TO_WATCH'),
@@ -104,6 +106,7 @@ export async function updateSeasonDetail(
 
     seasons[seasonIdx] = {
       ...targetSeason,
+      title: data.title !== undefined ? data.title : targetSeason.title,
       status: nextStatus,
       currentEpisode: Math.min(Math.max(nextCurrentEp, 0), targetSeason.episodes || Infinity),
       rating: data.rating !== undefined ? data.rating : targetSeason.rating,
@@ -164,6 +167,7 @@ export async function addNewSeasonToWatchEntry(
     const epsPerSeason = totalE > 0 ? Math.max(0, Math.floor(totalE / totalS)) : 0
     seasons = Array.from({ length: totalS }, (_, idx) => ({
       seasonNumber: idx + 1,
+      title: null,
       episodes: epsPerSeason,
       currentEpisode: idx + 1 === entry.currentSeason ? entry.currentEpisode : (entry.status === 'COMPLETED' ? epsPerSeason : 0),
       status: idx + 1 === entry.currentSeason ? entry.status : (entry.status === 'COMPLETED' ? 'COMPLETED' : 'PLAN_TO_WATCH'),
@@ -175,6 +179,7 @@ export async function addNewSeasonToWatchEntry(
   const newSeasonNumber = seasons.length + 1
   const newSeasonItem: SeasonDetailItem = {
     seasonNumber: newSeasonNumber,
+    title: null,
     episodes: episodesCount > 0 ? episodesCount : 0,
     currentEpisode: 0,
     status: 'PLAN_TO_WATCH',
@@ -246,6 +251,7 @@ export async function createWatchEntry(formData: {
       const eps = s.episodes || 0
       return {
         seasonNumber: s.seasonNumber,
+        title: s.title ? s.title.trim() : null,
         episodes: eps,
         currentEpisode: seasonStatus === 'COMPLETED' ? eps : 0,
         status: seasonStatus,
@@ -337,6 +343,7 @@ export async function updateWatchEntry(
       }
       return {
         seasonNumber: s.seasonNumber,
+        title: s.title !== undefined ? (s.title ? s.title.trim() : null) : (existing?.title || null),
         episodes: eps,
         currentEpisode: currentEp,
         status: seasonStatus,

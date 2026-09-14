@@ -41,6 +41,7 @@ export default function SeasonTabControl({
 
   const [status, setStatus] = useState<string>(activeSeason.status)
   const [episode, setEpisode] = useState<number>(activeSeason.currentEpisode)
+  const [seasonTitleInput, setSeasonTitleInput] = useState<string>(activeSeason.title || '')
   const [seasonEpsInput, setSeasonEpsInput] = useState<string>(
     activeSeason.episodes ? activeSeason.episodes.toString() : ''
   )
@@ -61,6 +62,7 @@ export default function SeasonTabControl({
     if (activeSeason) {
       setStatus(activeSeason.status)
       setEpisode(activeSeason.currentEpisode)
+      setSeasonTitleInput(activeSeason.title || '')
       setSeasonEpsInput(activeSeason.episodes ? activeSeason.episodes.toString() : '')
       setRating(activeSeason.rating ? activeSeason.rating.toString() : '')
       setNotes(activeSeason.notes ?? '')
@@ -90,6 +92,7 @@ export default function SeasonTabControl({
 
     try {
       await updateSeasonDetail(id, activeSeasonNumber, {
+        title: seasonTitleInput.trim() || null,
         status,
         currentEpisode: ep,
         episodes: parsedEps,
@@ -254,7 +257,7 @@ export default function SeasonTabControl({
                 }`}
               >
                 <div className="flex items-center gap-2 font-bold text-xs">
-                  <span>Season {s.seasonNumber}</span>
+                  <span>{s.title ? `S${s.seasonNumber}: ${s.title}` : `Season ${s.seasonNumber}`}</span>
                   {s.rating && (
                     <span className="text-amber-400 font-semibold text-[11px]">
                       ★ {s.rating}
@@ -289,10 +292,10 @@ export default function SeasonTabControl({
         <div className="flex items-center justify-between border-b border-border/60 pb-3">
           <div>
             <h3 className="text-base font-bold text-foreground">
-              Pengaturan Season {activeSeason.seasonNumber}
+              Pengaturan Season {activeSeason.seasonNumber}{activeSeason.title ? `: ${activeSeason.title}` : ''}
             </h3>
             <p className="text-xs text-muted">
-              Ubah status, episode, rating, dan catatan khusus untuk Season {activeSeason.seasonNumber}
+              Ubah judul, status, episode, rating, dan catatan khusus untuk Season {activeSeason.seasonNumber}
             </p>
           </div>
           <div className="text-right">
@@ -300,6 +303,21 @@ export default function SeasonTabControl({
               {activeSeason.episodes} Episode Total
             </span>
           </div>
+        </div>
+
+        {/* Judul Season */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+            Judul / Sub-judul Season {activeSeason.seasonNumber} (opsional)
+          </label>
+          <input
+            type="text"
+            value={seasonTitleInput}
+            onChange={(e) => setSeasonTitleInput(e.target.value)}
+            disabled={loading}
+            placeholder="Contoh: Shippuden, Mugen Train Arc, dll."
+            className="w-full rounded-lg border border-border bg-surface-hover px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-accent placeholder:text-muted/60"
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -29,6 +29,7 @@ export function formatEpisodeText(
 
 export interface SeasonDetailItem {
   seasonNumber: number
+  title?: string | null
   episodes: number
   currentEpisode: number
   status: string
