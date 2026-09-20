@@ -380,7 +380,7 @@ export default function WatchEntryForm({ initialData }: Props) {
         </div>
       )}
 
-      <form onSubmit={handleFormSubmitAttempt} className="rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40 space-y-5">
+      <form onSubmit={handleFormSubmitAttempt} className="rounded-xl border border-border/80 bg-surface/98 p-6 shadow-xl shadow-black/40 space-y-5">
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
             Judul Tontonan *

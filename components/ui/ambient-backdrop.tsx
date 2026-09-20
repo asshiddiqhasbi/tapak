@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/supabase-server'
 
 const getBackdropPosters = cache(async (userId: string) => {
   const entriesWithPosters = await prisma.watchEntry.findMany({
@@ -10,7 +10,7 @@ const getBackdropPosters = cache(async (userId: string) => {
     },
     select: { id: true, posterUrl: true },
     orderBy: { updatedAt: 'desc' },
-    take: 10,
+    take: 8,
   })
 
   return entriesWithPosters
@@ -19,8 +19,7 @@ const getBackdropPosters = cache(async (userId: string) => {
 })
 
 export default async function AmbientBackdrop() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (!user) return null
 
@@ -30,34 +29,35 @@ export default async function AmbientBackdrop() {
   const isFewPosters = posters.length < 4
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none transform-gpu" aria-hidden="true">
-      {/* Ambient Poster Backdrop - Lightweight GPU Layer */}
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none will-change-transform transform-gpu" aria-hidden="true">
+      {/* Ambient Poster Backdrop - Optimized Hardware Accelerated Layer */}
       <div
-        className={`absolute inset-0 opacity-20 filter blur-md transform-gpu ${
+        className={`absolute inset-0 opacity-15 transform-gpu ${
           isFewPosters
             ? 'flex justify-around items-center p-12 gap-8'
-            : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6'
+            : 'grid grid-cols-2 sm:grid-cols-4 gap-6'
         }`}
       >
         {posters.map((url, idx) => (
           <div
             key={`${idx}-${url.slice(-10)}`}
-            className={`overflow-hidden rounded-2xl bg-surface/20 ${
+            className={`overflow-hidden rounded-3xl bg-surface/10 ${
               isFewPosters ? 'h-[360px] w-[240px] max-w-[40vw]' : 'aspect-[2/3] w-full'
             }`}
           >
             <img
               src={url}
               alt=""
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover scale-110 opacity-70"
               loading="lazy"
+              decoding="async"
             />
           </div>
         ))}
       </div>
 
-      {/* Dark Overlay for Clean Readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background" />
+      {/* Dark Gradient Overlay for Clean Contrast & Smooth Readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
     </div>
   )
 }

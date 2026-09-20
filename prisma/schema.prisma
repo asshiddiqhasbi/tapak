@@ -67,5 +67,7 @@ model WatchEntry {
   @@index([userId, type])
   @@index([userId, medium])
   @@index([userId, rating])
+  @@index([userId, updatedAt])
+  @@index([userId, createdAt])
   @@map("watch_entries")
 }

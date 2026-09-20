@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/supabase-server'
 import { formatEpisodeText } from '@/lib/utils'
 
 const STATUS_BADGES: Record<string, { label: string; className: string }> = {
@@ -14,8 +14,7 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (!user) redirect('/login')
 
@@ -92,7 +91,7 @@ export default async function DashboardPage() {
         </div>
 
         {continueWatching.length === 0 ? (
-          <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-10 text-center shadow-xl shadow-black/30 space-y-3">
+          <div className="rounded-2xl border border-border/80 bg-surface/98 p-10 text-center shadow-xl shadow-black/30 space-y-3">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-muted text-accent text-2xl border border-accent/20">
               📺
             </div>

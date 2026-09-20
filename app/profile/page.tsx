@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/supabase-server'
 import UsernameForm from '@/components/ui/username-form'
 import AvatarUpload from '@/components/ui/avatar-upload'
 
@@ -15,8 +15,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 const ALL_STATUSES = ['PLAN_TO_WATCH', 'WATCHING', 'COMPLETED', 'ON_HOLD', 'DROPPED']
 
 export default async function ProfilePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
   const [dbUser, totalEntries, statusGroup, episodeSum] = await Promise.all([
@@ -57,7 +56,7 @@ export default async function ProfilePage() {
       </div>
 
       {/* Avatar Section & Info User */}
-      <div className="space-y-6 rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40">
+      <div className="space-y-6 rounded-2xl border border-border/80 bg-surface/98 p-6 shadow-xl shadow-black/40">
         <h2 className="text-base font-semibold text-foreground border-b border-border/60 pb-3">
           Foto Profil & Informasi Akun
         </h2>

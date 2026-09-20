@@ -155,7 +155,7 @@ export default function SeasonTabControl({
   }
 
   return (
-    <div className="space-y-6 rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-5 shadow-xl shadow-black/40">
+    <div className="space-y-6 rounded-2xl border border-border/80 bg-surface/98 p-5 shadow-xl shadow-black/40">
       <Toast
         message={toastMessage}
         type={toastType}

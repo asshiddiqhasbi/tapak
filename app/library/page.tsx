@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/supabase-server'
 import LibraryFilters from '@/components/watch-entry/library-filters'
 import BulkDeleteManager from '@/components/watch-entry/bulk-delete-manager'
 
@@ -13,8 +13,7 @@ export default async function LibraryPage({
   const { status, type, medium, sort, q, query } = await searchParams
   const searchQuery = (q || query || '').trim()
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (!user) redirect('/login')
 
@@ -84,7 +83,7 @@ export default async function LibraryPage({
 
       {/* Entries List / Grid */}
       {entries.length === 0 ? (
-        <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-12 text-center shadow-xl shadow-black/30 space-y-4">
+        <div className="rounded-2xl border border-border/80 bg-surface/98 p-12 text-center shadow-xl shadow-black/30 space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-muted text-accent text-3xl border border-accent/20">
             🎬
           </div>

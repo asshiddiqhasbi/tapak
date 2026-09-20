@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/supabase-server'
 import ProgressControl from '@/components/watch-entry/progress-control'
 import SeasonTabControl from '@/components/watch-entry/season-tab-control'
 import DeleteButton from '@/components/watch-entry/delete-button'
@@ -15,8 +15,7 @@ export default async function WatchEntryDetailPage({
 }) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) notFound()
 
   const entry = await prisma.watchEntry.findUnique({ where: { id } })
@@ -43,9 +42,9 @@ export default async function WatchEntryDetailPage({
   const typeIcon = TYPE_ICONS[entry.type] || '🎬'
   const mediumInfo = MEDIUM_BADGES[(entry as any).medium || 'LIVE_ACTION'] || { label: 'Live Action', icon: '📽' }
 
-  let seasonsDetail: SeasonDetailItem[] | null = null
+  let seasonsDetail: SeasonDetailItem[] = []
   if (entry.type !== 'FILM') {
-    if (Array.isArray(entry.seasonsDetail) && (entry.seasonsDetail as any[]).length > 0) {
+    if (Array.isArray(entry.seasonsDetail) && entry.seasonsDetail.length > 0) {
       seasonsDetail = entry.seasonsDetail as unknown as SeasonDetailItem[]
     } else {
       const totalS = entry.totalSeasons || 1
@@ -75,7 +74,7 @@ export default async function WatchEntryDetailPage({
       </div>
 
       {/* Header Info Card */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md p-6 shadow-xl shadow-black/40">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 rounded-2xl border border-border/80 bg-surface/98 p-6 shadow-xl shadow-black/40">
         <div className="flex gap-4">
           {entry.posterUrl && (
             <div className="relative h-36 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-border/80 shadow-md">
