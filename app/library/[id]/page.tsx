@@ -27,7 +27,8 @@ export default async function WatchEntryDetailPage({
     entry.totalEpisodes,
     entry.currentSeason,
     entry.totalSeasons,
-    entry.isOngoing
+    entry.isOngoing,
+    entry.seasonsDetail
   )
 
   const TYPE_ICONS: Record<string, string> = {

@@ -83,10 +83,10 @@ export default function YourJourneyTimeline({ events }: { events: JourneyEvent[]
 
               return (
                 <div key={event.id} className="relative flex gap-4 sm:gap-5">
-                  {/* Left Column: Number Circle & Continuous Timeline Line */}
+                  {/* Left Column: Event Icon Pin & Continuous Timeline Line */}
                   <div className="flex flex-col items-center">
-                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border border-border/90 bg-surface-hover/90 text-xs font-mono font-bold text-accent shadow-sm group-hover:border-accent">
-                      {index + 1}
+                    <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-border/90 bg-surface/90 text-sm shadow-md transition-transform group-hover:scale-110">
+                      {event.icon}
                     </div>
                     {!isLast && (
                       <div className="w-0.5 flex-1 bg-gradient-to-b from-border/90 via-border/50 to-border/20 my-1.5 min-h-[32px]" />
@@ -109,10 +109,7 @@ export default function YourJourneyTimeline({ events }: { events: JourneyEvent[]
                       href={`/library/${event.entryId}`}
                       className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-hover/50 p-3 sm:p-3.5 hover:border-accent/60 hover:bg-surface-hover transition-all duration-200 shadow-sm"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface border border-border text-sm shadow-inner">
-                          {event.icon}
-                        </span>
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div className="text-xs sm:text-sm text-muted min-w-0">
                           <span className="text-muted/90">{event.actionText} </span>
                           <strong className="text-foreground font-semibold group-hover:text-accent transition-colors">

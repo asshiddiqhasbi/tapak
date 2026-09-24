@@ -43,29 +43,32 @@ export default async function DashboardPage() {
   const totalEpisodesWatched = episodeSum._sum.currentEpisode ?? 0
   const username = dbUser?.username ?? 'Penonton'
 
-  // Construct "Your Journey" timeline events
-  const journeyEvents: JourneyEvent[] = []
+  // Construct "Your Journey" timeline events with intelligent deduplication
+  const journeyEventsMap = new Map<string, JourneyEvent>()
 
-  // 1. Completed events
+  // 1. Process recent completions (Highest priority milestone)
   for (const entry of recentCompletions) {
-    journeyEvents.push({
+    const hasRating = entry.rating && entry.rating > 0
+    journeyEventsMap.set(entry.id, {
       id: `${entry.id}-completed`,
       entryId: entry.id,
       title: entry.title,
       date: entry.completedAt || entry.updatedAt,
       type: 'COMPLETED',
-      actionText: 'Selesai menonton',
-      badge: 'Tamat',
+      actionText: hasRating
+        ? `Selesai menonton & memberi rating ${entry.rating}/10 untuk`
+        : 'Selesai menonton',
+      badge: hasRating ? `Tamat • ★ ${entry.rating}` : 'Tamat',
       badgeClass: 'text-emerald-300 bg-emerald-950/70 border-emerald-800/60',
       icon: '🎉',
       meta: entry.type === 'FILM' ? 'Film' : `${entry.totalEpisodes || entry.currentEpisode} Episode`,
     })
   }
 
-  // 2. Rated events
+  // 2. Process rated events (if not already completed)
   for (const entry of recentRatings) {
-    if (entry.rating) {
-      journeyEvents.push({
+    if (!journeyEventsMap.has(entry.id) && entry.rating) {
+      journeyEventsMap.set(entry.id, {
         id: `${entry.id}-rated`,
         entryId: entry.id,
         title: entry.title,
@@ -75,49 +78,40 @@ export default async function DashboardPage() {
         badge: `★ ${entry.rating}`,
         badgeClass: 'text-amber-300 bg-amber-950/70 border-amber-800/60',
         icon: '⭐',
-        meta: 'Rating',
+        meta: entry.type === 'FILM' ? 'Film' : 'Series',
       })
     }
   }
 
-  // 3. Recently added events
+  // 3. Process recently added events (if not already completed or rated)
   for (const entry of recentlyAdded) {
-    const statusLabel =
-      entry.status === 'PLAN_TO_WATCH'
-        ? 'Watchlist'
-        : entry.status === 'WATCHING'
-        ? 'Watching'
-        : 'Library'
+    if (!journeyEventsMap.has(entry.id)) {
+      const statusLabel =
+        entry.status === 'PLAN_TO_WATCH'
+          ? 'Watchlist'
+          : entry.status === 'WATCHING'
+          ? 'Watching'
+          : 'Library'
 
-    journeyEvents.push({
-      id: `${entry.id}-added`,
-      entryId: entry.id,
-      title: entry.title,
-      date: entry.createdAt,
-      type: 'ADDED',
-      actionText: `Menambahkan ke ${statusLabel}:`,
-      badge: entry.type === 'FILM' ? 'Film' : 'Series',
-      badgeClass: 'text-zinc-300 bg-zinc-800/80 border-zinc-700',
-      icon: '＋',
-      meta: entry.medium.replace('_', ' '),
-    })
-  }
-
-  // Sort events by date descending
-  journeyEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-  // Deduplicate events for the same entry + type
-  const seenEventKeys = new Set<string>()
-  const uniqueJourneyEvents: JourneyEvent[] = []
-  for (const event of journeyEvents) {
-    const key = `${event.entryId}-${event.type}`
-    if (!seenEventKeys.has(key)) {
-      seenEventKeys.add(key)
-      uniqueJourneyEvents.push(event)
+      journeyEventsMap.set(entry.id, {
+        id: `${entry.id}-added`,
+        entryId: entry.id,
+        title: entry.title,
+        date: entry.createdAt,
+        type: 'ADDED',
+        actionText: `Menambahkan ke ${statusLabel}:`,
+        badge: entry.type === 'FILM' ? 'Film' : 'Series',
+        badgeClass: 'text-zinc-300 bg-zinc-800/80 border-zinc-700',
+        icon: '＋',
+        meta: entry.medium.replace('_', ' '),
+      })
     }
   }
 
-  const displayJourneyEvents = uniqueJourneyEvents.slice(0, 4)
+  // Convert map values to array and sort chronologically descending
+  const displayJourneyEvents = Array.from(journeyEventsMap.values())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4)
 
   // Split Continue Watching into Hero and Secondary stack
   const heroEntry = continueWatching[0] || null

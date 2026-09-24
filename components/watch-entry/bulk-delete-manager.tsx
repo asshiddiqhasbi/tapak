@@ -37,6 +37,7 @@ export interface WatchEntryItem {
   currentEpisode: number
   totalSeasons?: number | null
   currentSeason?: number | null
+  seasonsDetail?: any
   rating?: number | null
   startedAt?: Date | null
   completedAt?: Date | null
@@ -171,7 +172,8 @@ export default function BulkDeleteManager({
             entry.totalEpisodes,
             entry.currentSeason,
             entry.totalSeasons,
-            entry.isOngoing
+            entry.isOngoing,
+            entry.seasonsDetail
           )
           const progressPct =
             entry.type !== 'FILM' && entry.totalEpisodes && entry.totalEpisodes > 0
