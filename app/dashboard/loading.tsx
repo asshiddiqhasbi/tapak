@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-12 animate-pulse" aria-busy="true">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-12 animate-pulse" aria-busy="true">
       {/* Header Skeleton */}
       <div className="space-y-3">
         <div className="h-8 w-64 rounded-lg bg-surface-hover/80" />

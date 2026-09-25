@@ -1,6 +1,6 @@
 export default function LibraryLoading() {
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-6 animate-pulse" aria-busy="true">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6 animate-pulse" aria-busy="true">
       {/* Header Skeleton */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-2">
