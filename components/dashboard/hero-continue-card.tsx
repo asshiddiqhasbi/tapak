@@ -24,15 +24,15 @@ export type HeroContinueEntry = {
   rating: number | null
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  FILM: '🎬',
-  SERIES: '📺',
+const TYPE_LABELS: Record<string, string> = {
+  FILM: 'Film',
+  SERIES: 'Series',
 }
 
-const MEDIUM_BADGES: Record<string, { label: string; icon: string }> = {
-  ANIME: { label: 'Anime', icon: '🍿' },
-  LIVE_ACTION: { label: 'Live Action', icon: '📽' },
-  ANIMATION: { label: 'Animasi', icon: '🎨' },
+const MEDIUM_LABELS: Record<string, string> = {
+  ANIME: 'Anime',
+  LIVE_ACTION: 'Live Action',
+  ANIMATION: 'Animasi',
 }
 
 export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }) {
@@ -41,8 +41,8 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  const typeIcon = TYPE_ICONS[entry.type] || '🎬'
-  const mediumInfo = MEDIUM_BADGES[entry.medium] || { label: 'Live Action', icon: '📽' }
+  const typeLabel = TYPE_LABELS[entry.type] || entry.type
+  const mediumLabel = MEDIUM_LABELS[entry.medium] || entry.medium
 
   const stats = getActiveSeasonStats({
     type: entry.type,
@@ -103,21 +103,12 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
         />
       )}
 
-      <div className="group relative w-full overflow-hidden rounded-2xl border border-border/80 bg-surface/95 p-4 sm:p-6 shadow-xl shadow-black/30 hover:border-accent/50 transition-all duration-300">
-        {/* Ambient Blurred Backdrop from artwork */}
-        {entry.posterUrl && (
-          <div
-            className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 scale-125 pointer-events-none transition-opacity duration-500 group-hover:opacity-30"
-            style={{ backgroundImage: `url(${entry.posterUrl})` }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/85 to-transparent pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col sm:flex-row gap-5 items-stretch">
-          {/* Uncropped 2:3 Portrait Poster */}
+      <div className="w-full overflow-hidden rounded-2xl border border-border/80 bg-surface p-5 sm:p-6 shadow-md hover:border-border transition-colors duration-200">
+        <div className="flex flex-col sm:flex-row gap-5 items-stretch">
+          {/* 2:3 Portrait Poster */}
           <Link
             href={`/library/${entry.id}`}
-            className="relative self-center sm:self-auto w-36 sm:w-40 md:w-44 aspect-[2/3] shrink-0 overflow-hidden rounded-xl border border-border/80 bg-surface-hover shadow-lg group/poster block"
+            className="relative self-center sm:self-auto w-36 sm:w-40 md:w-44 aspect-[2/3] shrink-0 overflow-hidden rounded-xl border border-border/70 bg-surface-hover shadow-sm group/poster block"
           >
             {entry.posterUrl ? (
               <Image
@@ -125,19 +116,21 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
                 alt={entry.title}
                 fill
                 sizes="(max-width: 640px) 150px, 180px"
-                className="object-cover group-hover/poster:scale-105 transition-transform duration-500 ease-out"
+                className="object-cover group-hover/poster:scale-105 transition-transform duration-300 ease-out"
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center text-muted p-2 text-center">
-                <span className="text-3xl mb-1">🎬</span>
-                <span className="text-[10px] font-mono leading-tight">{entry.title}</span>
+                <svg className="h-8 w-8 mb-1.5 text-muted/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                </svg>
+                <span className="text-[11px] leading-tight line-clamp-2">{entry.title}</span>
               </div>
             )}
 
-            {/* Subtle Rating Badge on Poster corner */}
+            {/* Rating Badge */}
             {entry.rating && (
               <div className="absolute bottom-2 left-2 z-10">
-                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-300 bg-black/80 backdrop-blur-md border border-amber-400/30 px-2 py-0.5 rounded shadow-sm">
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-300 bg-background/90 border border-border/80 px-2 py-0.5 rounded shadow-sm">
                   ★ {entry.rating}
                 </span>
               </div>
@@ -148,22 +141,21 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
           <div className="flex-1 min-w-0 flex flex-col justify-between space-y-4">
             <div className="space-y-2">
               {/* Badges Bar */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-accent bg-accent-muted border border-accent/20 px-2.5 py-0.5 rounded-md shadow-sm">
-                  <span>{typeIcon} {entry.type}</span>
-                  <span>•</span>
-                  <span>{mediumInfo.icon} {mediumInfo.label}</span>
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="inline-flex items-center text-[11px] font-medium text-muted bg-surface-hover border border-border/80 px-2.5 py-0.5 rounded-md">
+                  {typeLabel} • {mediumLabel}
                 </span>
                 {entry.isOngoing && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-800/60 px-2.5 py-0.5 rounded-md shadow-sm">
-                    🟢 ONGOING
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Ongoing
                   </span>
                 )}
               </div>
 
               {/* Title */}
               <Link href={`/library/${entry.id}`} className="block group/title">
-                <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground line-clamp-2 group-hover/title:text-accent transition-colors">
+                <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground line-clamp-2 group-hover/title:text-accent transition-colors">
                   {entry.title}
                 </h3>
               </Link>
@@ -181,12 +173,12 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
             </div>
 
             {/* Progress Bar & Details */}
-            <div className="pt-2 border-t border-border/70 space-y-2">
+            <div className="pt-3 border-t border-border/60 space-y-2">
               {stats.progressPct !== null && (
                 <>
-                  <div className="h-2 w-full rounded-full bg-border/80 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                      className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
                       style={{ width: `${stats.progressPct}%` }}
                     />
                   </div>
@@ -199,7 +191,7 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
                         ? 'Episode terakhir season'
                         : 'Dalam progres'}
                     </span>
-                    <span className="font-bold text-accent">{stats.progressPct}%</span>
+                    <span className="font-semibold text-accent">{stats.progressPct}%</span>
                   </div>
                 </>
               )}
@@ -210,7 +202,7 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
                   type="button"
                   onClick={handleQuickProgress}
                   disabled={isPending}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs sm:text-sm font-bold text-background hover:bg-accent-hover active:scale-[0.98] transition-all shadow-md shadow-accent/20 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs sm:text-sm font-semibold text-background hover:bg-accent-hover active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isPending ? (
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
@@ -224,11 +216,8 @@ export default function HeroContinueCard({ entry }: { entry: HeroContinueEntry }
 
                 <Link
                   href={`/library/${entry.id}`}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/90 bg-surface-hover/80 px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-surface-hover hover:border-accent/40 active:scale-[0.98] transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-hover px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:border-accent/40 active:scale-[0.98] transition-all"
                 >
-                  <svg className="h-4 w-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
                   <span>Detail</span>
                 </Link>
               </div>

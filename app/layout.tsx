@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/ui/navbar";
-import AmbientBackdrop from "@/components/ui/ambient-backdrop";
 import NavigationProgressBar from "@/components/ui/navigation-progress-bar";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -48,7 +47,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans relative">
         <NavigationProgressBar />
-        <AmbientBackdrop />
         <Navbar />
         <main className="flex-1 relative z-10">{children}</main>
       </body>

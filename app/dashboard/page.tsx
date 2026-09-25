@@ -43,7 +43,7 @@ export default async function DashboardPage() {
   const totalEpisodesWatched = episodeSum._sum.currentEpisode ?? 0
   const username = dbUser?.username ?? 'Penonton'
 
-  // Construct "Your Journey" timeline events with intelligent deduplication
+  // Construct "Aktivitas Terbaru" timeline events with intelligent deduplication
   const journeyEventsMap = new Map<string, JourneyEvent>()
 
   // 1. Process recent completions (Highest priority milestone)
@@ -56,11 +56,11 @@ export default async function DashboardPage() {
       date: entry.completedAt || entry.updatedAt,
       type: 'COMPLETED',
       actionText: hasRating
-        ? `Selesai menonton & memberi rating ${entry.rating}/10 untuk`
+        ? `Selesai menonton dan memberi rating ${entry.rating}/10 untuk`
         : 'Selesai menonton',
       badge: hasRating ? `Tamat • ★ ${entry.rating}` : 'Tamat',
-      badgeClass: 'text-emerald-300 bg-emerald-950/70 border-emerald-800/60',
-      icon: '🎉',
+      badgeClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      icon: 'completed',
       meta: entry.type === 'FILM' ? 'Film' : `${entry.totalEpisodes || entry.currentEpisode} Episode`,
     })
   }
@@ -76,8 +76,8 @@ export default async function DashboardPage() {
         type: 'RATED',
         actionText: `Memberi rating ${entry.rating}/10 untuk`,
         badge: `★ ${entry.rating}`,
-        badgeClass: 'text-amber-300 bg-amber-950/70 border-amber-800/60',
-        icon: '⭐',
+        badgeClass: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+        icon: 'rated',
         meta: entry.type === 'FILM' ? 'Film' : 'Series',
       })
     }
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
           ? 'Watchlist'
           : entry.status === 'WATCHING'
           ? 'Watching'
-          : 'Library'
+          : 'Koleksi'
 
       journeyEventsMap.set(entry.id, {
         id: `${entry.id}-added`,
@@ -101,8 +101,8 @@ export default async function DashboardPage() {
         type: 'ADDED',
         actionText: `Menambahkan ke ${statusLabel}:`,
         badge: entry.type === 'FILM' ? 'Film' : 'Series',
-        badgeClass: 'text-zinc-300 bg-zinc-800/80 border-zinc-700',
-        icon: '＋',
+        badgeClass: 'text-zinc-300 bg-zinc-800 border-zinc-700/80',
+        icon: 'added',
         meta: entry.medium.replace('_', ' '),
       })
     }
@@ -119,76 +119,74 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-12">
-      {/* Header & Personal Greeting */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Selamat datang kembali, {username}! 👋
+      {/* Header & Clean Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/60">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Selamat datang kembali, {username}
           </h1>
-          <div className="mt-2.5 flex items-center gap-3 text-xs text-muted font-medium">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface/95 border border-border/80 shadow-md">
-              <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+          <div className="flex items-center gap-3 text-xs text-muted font-medium">
+            <span>
               <strong className="text-foreground font-semibold">{continueWatching.length}</strong> tontonan aktif
             </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface/95 border border-border/80 shadow-md">
-              🎬 <strong className="text-foreground font-semibold">{totalEpisodesWatched}</strong> episode ditonton
+            <span className="text-border">•</span>
+            <span>
+              <strong className="text-foreground font-semibold">{totalEpisodesWatched}</strong> episode ditonton
             </span>
           </div>
         </div>
 
         <Link
           href="/library/new"
-          title="Tambah Tontonan Baru"
-          aria-label="Tambah Tontonan Baru"
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-accent text-background font-bold text-2xl leading-none select-none hover:bg-accent-hover hover:scale-105 active:scale-95 transition-all shadow-md shadow-accent/20 pb-0.5"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs sm:text-sm font-semibold text-background hover:bg-accent-hover transition-all shadow-sm active:scale-[0.98] w-fit"
         >
-          +
+          <span className="text-base leading-none font-bold">+</span>
+          <span>Tambah Tontonan</span>
         </Link>
       </div>
 
-      {/* 1. Continue Watching Section (Cinematic Hero + Secondary Split) */}
+      {/* 1. Continue Watching Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="h-5 w-1 rounded-full bg-accent flex-shrink-0" />
-            <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-              Lanjutkan Nonton <span className="text-xs font-mono font-normal text-muted uppercase tracking-wider">(Continue Watching)</span>
-            </h2>
-          </div>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">
+            Lanjutkan Menonton
+          </h2>
           <span className="text-xs text-muted font-mono">
             {continueWatching.length} judul aktif
           </span>
         </div>
 
         {!heroEntry ? (
-          <div className="rounded-2xl border border-dashed border-border/80 bg-surface/40 p-10 text-center shadow-xl shadow-black/20 space-y-3">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-muted text-accent text-2xl border border-accent/20">
-              📺
+          <div className="rounded-2xl border border-dashed border-border/80 bg-surface/30 p-10 text-center space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-surface-hover border border-border text-muted">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-semibold text-foreground">Belum ada tontonan aktif</h3>
+              <h3 className="text-sm font-semibold text-foreground">Belum ada tontonan aktif</h3>
               <p className="text-xs text-muted max-w-sm mx-auto">
-                Tontonan dengan status Watching akan otomatis muncul di sini untuk akses cepat update episode.
+                Tontonan dengan status Watching akan otomatis muncul di sini.
               </p>
             </div>
             <Link
               href="/library/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-background hover:bg-accent-hover transition-colors shadow-md mt-2"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-background hover:bg-accent-hover transition-colors shadow-sm mt-2"
             >
-              + Tambah Tontonan Baru
+              + Tambah Judul Baru
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-            {/* Main Hero Card (Large 16:9 cinematic preview) */}
+            {/* Main Hero Card */}
             <div className={secondaryEntries.length > 0 ? 'lg:col-span-7 xl:col-span-8 flex' : 'lg:col-span-12 flex'}>
               <div className="w-full flex">
                 <HeroContinueCard entry={heroEntry as any} />
               </div>
             </div>
 
-            {/* Secondary Continue Stack (Right side on desktop, stacked below on mobile) */}
+            {/* Secondary Continue Stack */}
             {secondaryEntries.length > 0 && (
               <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between gap-3">
                 <div className="space-y-3">
@@ -197,14 +195,13 @@ export default async function DashboardPage() {
                   ))}
                 </div>
 
-                {/* If secondary items are fewer than 3, provide a dashed slot */}
                 {secondaryEntries.length < 3 && (
                   <Link
                     href="/library/new"
-                    className="group flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-surface/40 p-3 hover:bg-surface/70 hover:border-accent/60 transition-all text-xs font-semibold text-muted hover:text-accent"
+                    className="group flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-surface/30 p-3 hover:bg-surface/60 hover:border-accent/50 transition-all text-xs font-medium text-muted hover:text-foreground"
                   >
                     <span className="text-base font-bold">+</span>
-                    <span>Tambah Judul Aktif Lainnya</span>
+                    <span>Tambah Judul Lainnya</span>
                   </Link>
                 )}
               </div>
@@ -213,10 +210,10 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      {/* 2. Your Journey / Jejak Tontonan Timeline */}
+      {/* 2. Aktivitas Terbaru Timeline */}
       <YourJourneyTimeline events={displayJourneyEvents} />
 
-      {/* 3. Recently Added (Editorial Grid) */}
+      {/* 3. Koleksi Terbaru */}
       <RecentlyAddedGrid entries={recentlyAdded as any} />
     </div>
   )
