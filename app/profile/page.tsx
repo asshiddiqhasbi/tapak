@@ -36,7 +36,7 @@ export default async function ProfilePage() {
   ALL_STATUSES.forEach((s) => {
     statusCounts[s] = 0
   })
-  statusGroup.forEach((group) => {
+  statusGroup.forEach((group: any) => {
     statusCounts[group.status] = group._count.status
   })
 

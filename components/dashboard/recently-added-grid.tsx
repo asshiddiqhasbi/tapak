@@ -116,7 +116,7 @@ export default function RecentlyAddedGrid({ entries }: { entries: RecentlyAddedE
                       {entry.title}
                     </h3>
                     <p className="text-[11px] text-muted font-mono truncate mt-0.5">
-                      {typeIcon} {entry.medium.replace('_', ' ')}
+                      {entry.medium.replace('_', ' ')}
                     </p>
                   </div>
                 </div>

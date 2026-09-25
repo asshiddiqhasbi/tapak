@@ -190,7 +190,7 @@ export default async function DashboardPage() {
             {secondaryEntries.length > 0 && (
               <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between gap-3">
                 <div className="space-y-3">
-                  {secondaryEntries.map((sec) => (
+                  {secondaryEntries.map((sec: any) => (
                     <SecondaryContinueCard key={sec.id} entry={sec as any} />
                   ))}
                 </div>

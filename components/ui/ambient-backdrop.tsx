@@ -14,8 +14,8 @@ const getBackdropPosters = cache(async (userId: string) => {
   })
 
   return entriesWithPosters
-    .map((e) => e.posterUrl)
-    .filter((url): url is string => Boolean(url && url.trim().length > 0))
+    .map((e: any) => e.posterUrl)
+    .filter((url: any): url is string => Boolean(url && url.trim().length > 0))
 })
 
 export default async function AmbientBackdrop() {
@@ -38,7 +38,7 @@ export default async function AmbientBackdrop() {
             : 'grid grid-cols-2 sm:grid-cols-4 gap-6'
         }`}
       >
-        {posters.map((url, idx) => (
+        {posters.map((url: any, idx: number) => (
           <div
             key={`${idx}-${url.slice(-10)}`}
             className={`overflow-hidden rounded-3xl bg-surface/10 ${
